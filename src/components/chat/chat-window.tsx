@@ -42,12 +42,18 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
         table: 'messages',
         filter: `channel_id=eq.${channel.id}`
       }, async (payload) => {
-        const { data } = await supabase
+        console.log('New message received:', payload)
+        const { data, error } = await supabase
           .from('messages')
           .select('*, sender:profiles!sender_id(*), reactions(*)')
           .eq('id', payload.new.id)
           .single()
         
+        if (error) {
+          console.error('Error fetching new message details:', error)
+          return
+        }
+
         if (data) {
           setMessages((current) => {
             if (current.some(m => m.id === data.id)) return current
@@ -59,24 +65,29 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
         event: 'INSERT',
         schema: 'public',
         table: 'reactions'
-      }, (payload) => {
+      }, async (payload) => {
         const newReaction = payload.new as Reaction
-        setMessages((current) => current.map(m => {
-          if (m.id === newReaction.message_id) {
-            // Avoid duplicates if we already have it (e.g. from optimistic update)
-            // Note: Optimistic update uses temp ID, so we might have a duplicate if we don't handle it carefully.
-            // For simplicity, we'll just append if ID doesn't match, but in real app we'd replace temp ID.
-            // Here we just check if a reaction with same user and emoji exists to avoid visual duplicate if we didn't replace temp ID.
-            if (m.reactions?.some(r => r.id === newReaction.id)) return m
-            return {
-              ...m,
-              reactions: [...(m.reactions || []), newReaction]
+        // Verify if this reaction belongs to a message in this channel
+        // We can check if the message_id exists in our current messages list
+        setMessages((current) => {
+          const messageExists = current.some(m => m.id === newReaction.message_id)
+          if (!messageExists) return current
+
+          return current.map(m => {
+            if (m.id === newReaction.message_id) {
+              if (m.reactions?.some(r => r.id === newReaction.id)) return m
+              return {
+                ...m,
+                reactions: [...(m.reactions || []), newReaction]
+              }
             }
-          }
-          return m
-        }))
+            return m
+          })
+        })
       })
-      .subscribe()
+      .subscribe((status) => {
+        console.log(`Subscription status for channel ${channel.id}:`, status)
+      })
 
     return () => {
       supabase.removeChannel(channelSubscription)
