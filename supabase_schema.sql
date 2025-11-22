@@ -98,13 +98,27 @@ create policy "Owners can update their squads."
   on public.squads for update
   using ( auth.uid() = owner_id );
 
+-- Helper function to check squad membership (bypasses RLS to avoid recursion)
+create or replace function public.is_member_of(_squad_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from public.squad_members
+    where squad_id = _squad_id
+    and user_id = auth.uid()
+  );
+$$;
+
 -- Squad Members: Members read, Leaders update
 create policy "Squad members are viewable by squad members."
   on public.squad_members for select
   using (
-    auth.uid() in (
-      select user_id from public.squad_members where squad_id = squad_id
-    )
+    is_member_of(squad_id)
   );
 
 create policy "Users can join squads."
