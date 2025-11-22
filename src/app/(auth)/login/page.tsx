@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { login } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
@@ -10,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function LoginPage() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -27,14 +25,18 @@ export default function LoginPage() {
         setError(result.error)
       }
     } catch (err) {
-      setError("Something went wrong")
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Something went wrong")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <Card className="w-[350px]">
+    <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>Enter your email below to login to your account.</CardDescription>
@@ -57,7 +59,7 @@ export default function LoginPage() {
             {isLoading ? "Logging in..." : "Login"}
           </Button>
           <div className="text-sm text-center text-slate-500">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="underline hover:text-slate-900">
               Sign up
             </Link>

@@ -1,3 +1,14 @@
+-- Reset Database Schema
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.handle_new_user() cascade;
+drop function if exists public.is_member_of(_squad_id uuid) cascade;
+
+drop table if exists public.messages cascade;
+drop table if exists public.channels cascade;
+drop table if exists public.squad_members cascade;
+drop table if exists public.squads cascade;
+drop table if exists public.profiles cascade;
+
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
@@ -141,3 +152,16 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Enable Realtime for Messages
+alter publication supabase_realtime add table messages;
+
+-- Backfill profiles for existing users (fixes foreign key error after reset)
+insert into public.profiles (id, name, email, image)
+select 
+  id, 
+  raw_user_meta_data ->> 'name', 
+  email, 
+  raw_user_meta_data ->> 'avatar_url'
+from auth.users
+where id not in (select id from public.profiles);

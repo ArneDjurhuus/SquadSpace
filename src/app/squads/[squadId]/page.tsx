@@ -5,19 +5,29 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Settings, Users, MessageSquare, Calendar } from "lucide-react"
+import { getChannels } from "@/app/actions/chat"
+import { ChatLayout } from "@/components/chat/chat-layout"
 
 interface SquadPageProps {
-  params: {
+  params: Promise<{
     squadId: string
-  }
+  }>
 }
 
 export default async function SquadPage({ params }: SquadPageProps) {
+  const { squadId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     redirect("/login")
+  }
+
+  const currentUser = {
+    id: user.id,
+    email: user.email || null,
+    name: user.user_metadata?.name || null,
+    image: user.user_metadata?.avatar_url || null
   }
 
   const { data: squad, error } = await supabase
@@ -29,7 +39,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
         profiles (*)
       )
     `)
-    .eq('id', params.squadId)
+    .eq('id', squadId)
     .single()
 
   if (error || !squad) {
@@ -56,6 +66,8 @@ export default async function SquadPage({ params }: SquadPageProps) {
       user: m.profiles
     }))
   }
+
+  const channels = await getChannels(squadId)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -167,10 +179,12 @@ export default async function SquadPage({ params }: SquadPageProps) {
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="chat">
-              <div className="flex items-center justify-center h-64 border rounded-lg bg-muted/10">
-                <p className="text-muted-foreground">Chat functionality coming soon.</p>
-              </div>
+            <TabsContent value="chat" className="mt-6">
+              <ChatLayout 
+                squadId={squadId} 
+                initialChannels={channels}
+                currentUser={currentUser}
+              />
             </TabsContent>
 
             <TabsContent value="events">
