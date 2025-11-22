@@ -8,7 +8,7 @@ import { ArrowRight, Users, Zap, Shield } from "lucide-react"
 export function Hero() {
   return (
     <section className="relative overflow-hidden pt-16 md:pt-20 lg:pt-32 pb-16 md:pb-20 lg:pb-32">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
+      {/* <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div> */}
       <div className="container mx-auto flex flex-col items-center gap-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

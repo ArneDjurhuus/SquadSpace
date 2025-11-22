@@ -32,3 +32,27 @@ export interface Message {
   sender?: Profile
   reactions?: Reaction[]
 }
+
+export interface Event {
+  id: string
+  squad_id: string
+  created_by: string
+  title: string
+  description: string | null
+  start_time: string
+  end_time: string
+  location: string | null
+  created_at: string
+  updated_at: string
+  creator?: Profile
+  participants?: EventParticipant[]
+}
+
+export interface EventParticipant {
+  id: string
+  event_id: string
+  user_id: string
+  status: 'going' | 'maybe' | 'not_going'
+  created_at: string
+  user?: Profile
+}

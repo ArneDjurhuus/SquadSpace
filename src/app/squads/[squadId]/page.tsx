@@ -6,7 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Settings, Users, MessageSquare, Calendar } from "lucide-react"
 import { getChannels } from "@/app/actions/chat"
+import { getEvents } from "@/app/actions/events"
 import { ChatLayout } from "@/components/chat/chat-layout"
+import { EventList } from "@/components/events/event-list"
+import { CreateEventDialog } from "@/components/events/create-event-dialog"
+import { SquadCalendar } from "@/components/events/squad-calendar"
+
+interface SquadMemberResponse {
+  id: string
+  user_id: string
+  role: string
+  joined_at: string
+  profiles: {
+    name: string | null
+    image: string | null
+    email: string | null
+  }
+}
 
 interface SquadPageProps {
   params: Promise<{
@@ -47,7 +63,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
   }
 
   const isMember = squad.squad_members.some(
-    (member: any) => member.user_id === user.id
+    (member: SquadMemberResponse) => member.user_id === user.id
   )
 
   if (!isMember) {
@@ -61,13 +77,14 @@ export default async function SquadPage({ params }: SquadPageProps) {
     ...squad,
     inviteCode: squad.invite_code,
     createdAt: new Date(squad.created_at),
-    members: squad.squad_members.map((m: any) => ({
+    members: squad.squad_members.map((m: SquadMemberResponse) => ({
       ...m,
       user: m.profiles
     }))
   }
 
   const channels = await getChannels(squadId)
+  const events = await getEvents(squadId)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -117,16 +134,8 @@ export default async function SquadPage({ params }: SquadPageProps) {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="mt-6">
+            <TabsContent value="overview" className="mt-6 space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">No recent activity.</p>
-                  </CardContent>
-                </Card>
                 <Card>
                   <CardHeader>
                     <CardTitle>Squad Info</CardTitle>
@@ -144,7 +153,24 @@ export default async function SquadPage({ params }: SquadPageProps) {
                     </div>
                   </CardContent>
                 </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">No recent activity.</p>
+                  </CardContent>
+                </Card>
               </div>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Squad Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SquadCalendar events={events} currentUser={currentUser} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="members" className="mt-6">
@@ -154,7 +180,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {formattedSquad.members.map((member: any) => (
+                    {formattedSquad.members.map((member: SquadMemberResponse & { user: SquadMemberResponse['profiles'] }) => (
                       <div
                         key={member.id}
                         className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
@@ -187,9 +213,13 @@ export default async function SquadPage({ params }: SquadPageProps) {
               />
             </TabsContent>
 
-            <TabsContent value="events">
-              <div className="flex items-center justify-center h-64 border rounded-lg bg-muted/10">
-                <p className="text-muted-foreground">Event planning coming soon.</p>
+            <TabsContent value="events" className="mt-6">
+              <div className="flex flex-col space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold tracking-tight">Upcoming Events</h2>
+                  <CreateEventDialog squadId={squadId} />
+                </div>
+                <EventList events={events} currentUser={currentUser} />
               </div>
             </TabsContent>
           </Tabs>

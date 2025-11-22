@@ -8,9 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
+import { PasswordCriteria } from "@/components/auth/password-criteria"
+
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [password, setPassword] = useState("")
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -53,7 +56,15 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" required />
+            <Input 
+              id="password" 
+              name="password" 
+              type="password" 
+              required 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <PasswordCriteria password={password} />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
         </CardContent>

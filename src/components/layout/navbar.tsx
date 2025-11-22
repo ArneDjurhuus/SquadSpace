@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button"
 import { Command } from "lucide-react"
 import { createClient } from "@/utils/supabase/server"
 
+import { UserNav } from "@/components/layout/user-nav"
+
 export async function Navbar() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/40 backdrop-blur-md supports-[backdrop-filter]:bg-background/20">
       <div className="container mx-auto flex h-16 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
@@ -35,11 +37,14 @@ export async function Navbar() {
           </div>
           <nav className="flex items-center space-x-2">
             {user ? (
-              <Link href="/dashboard">
-                <Button size="sm">
-                  Dashboard
-                </Button>
-              </Link>
+              <>
+                <Link href="/dashboard">
+                  <Button size="sm">
+                    Dashboard
+                  </Button>
+                </Link>
+                <UserNav user={user} />
+              </>
             ) : (
               <>
                 <Link href="/login">
