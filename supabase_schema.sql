@@ -8,6 +8,7 @@ drop table if exists public.channels cascade;
 drop table if exists public.squad_members cascade;
 drop table if exists public.squads cascade;
 drop table if exists public.profiles cascade;
+drop table if exists public.reactions cascade;
 
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
@@ -60,10 +61,21 @@ create table public.channels (
 create table public.messages (
   id uuid default uuid_generate_v4() primary key,
   content text not null,
+  image_url text,
   channel_id uuid references public.channels(id) on delete cascade not null,
   sender_id uuid references public.profiles(id) on delete cascade not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Create Reactions table
+create table public.reactions (
+  id uuid default uuid_generate_v4() primary key,
+  message_id uuid references public.messages(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  emoji text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(message_id, user_id, emoji)
 );
 
 -- Enable Row Level Security (RLS)
@@ -72,6 +84,7 @@ alter table public.squads enable row level security;
 alter table public.squad_members enable row level security;
 alter table public.channels enable row level security;
 alter table public.messages enable row level security;
+alter table public.reactions enable row level security;
 
 -- RLS Policies
 
@@ -165,3 +178,66 @@ select
   raw_user_meta_data ->> 'avatar_url'
 from auth.users
 where id not in (select id from public.profiles);
+
+-- Channels Policies
+create policy "Channels are viewable by squad members."
+  on public.channels for select
+  using ( is_member_of(squad_id) );
+
+create policy "Squad members can create channels."
+  on public.channels for insert
+  with check ( is_member_of(squad_id) );
+
+-- Helper function to check channel access (bypasses RLS)
+create or replace function public.can_access_channel(_channel_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from public.channels c
+    join public.squad_members sm on sm.squad_id = c.squad_id
+    where c.id = _channel_id
+    and sm.user_id = auth.uid()
+  );
+$$;
+
+grant execute on function public.can_access_channel to authenticated;
+grant execute on function public.can_access_channel to service_role;
+
+-- Messages Policies
+create policy "Messages are viewable by squad members."
+  on public.messages for select
+  using ( can_access_channel(channel_id) );
+
+create policy "Squad members can send messages."
+  on public.messages for insert
+  with check ( can_access_channel(channel_id) );
+
+-- Reactions Policies
+create policy "Reactions are viewable by squad members."
+  on public.reactions for select
+  using (
+    exists (
+      select 1 from public.messages
+      where id = message_id
+      and can_access_channel(channel_id)
+    )
+  );
+
+create policy "Squad members can add reactions."
+  on public.reactions for insert
+  with check (
+    exists (
+      select 1 from public.messages
+      where id = message_id
+      and can_access_channel(channel_id)
+    )
+  );
+
+create policy "Users can remove their own reactions."
+  on public.reactions for delete
+  using ( auth.uid() = user_id );

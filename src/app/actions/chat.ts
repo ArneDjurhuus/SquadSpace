@@ -48,7 +48,8 @@ export async function getMessages(channelId: string) {
     .from('messages')
     .select(`
       *,
-      sender:profiles(*)
+      sender:profiles!sender_id(*),
+      reactions(*)
     `)
     .eq('channel_id', channelId)
     .order('created_at', { ascending: true })
@@ -61,7 +62,7 @@ export async function getMessages(channelId: string) {
   return messages
 }
 
-export async function sendMessage(channelId: string, content: string) {
+export async function addReaction(messageId: string, emoji: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -70,16 +71,44 @@ export async function sendMessage(channelId: string, content: string) {
   }
 
   const { error } = await supabase
+    .from('reactions')
+    .insert({
+      message_id: messageId,
+      user_id: user.id,
+      emoji: emoji
+    })
+
+  if (error) {
+    // Ignore duplicate key error (user already reacted with this emoji)
+    if (error.code === '23505') return { success: true }
+    return { error: error.message }
+  }
+
+  return { success: true }
+}
+
+export async function sendMessage(channelId: string, content: string, imageUrl?: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { data, error } = await supabase
     .from('messages')
     .insert({
       channel_id: channelId,
       content: content,
+      image_url: imageUrl,
       sender_id: user.id
     })
+    .select('*, sender:profiles!sender_id(*)')
+    .single()
 
   if (error) {
     return { error: error.message }
   }
 
-  return { success: true }
+  return { success: true, data }
 }
