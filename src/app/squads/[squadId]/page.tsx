@@ -118,7 +118,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
 
           {/* Content Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList>
+            <TabsList className="w-full h-auto flex-wrap justify-start md:w-auto md:flex-nowrap">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="chat">
                 <MessageSquare className="mr-2 h-4 w-4" />

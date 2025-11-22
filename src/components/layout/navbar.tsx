@@ -4,6 +4,7 @@ import { Command } from "lucide-react"
 import { createClient } from "@/utils/supabase/server"
 
 import { UserNav } from "@/components/layout/user-nav"
+import { MobileNav } from "@/components/layout/mobile-nav"
 
 export async function Navbar() {
   const supabase = await createClient()
@@ -11,7 +12,8 @@ export async function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/40 backdrop-blur-md supports-[backdrop-filter]:bg-background/20">
-      <div className="container mx-auto flex h-16 items-center">
+      <div className="container mx-auto flex h-16 items-center px-4">
+        <MobileNav />
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Command className="h-6 w-6" />
@@ -33,7 +35,12 @@ export async function Navbar() {
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none">
-            {/* Search or other items */}
+            <Link href="/" className="mr-6 flex items-center space-x-2 md:hidden">
+              <Command className="h-6 w-6" />
+              <span className="font-bold inline-block">
+                SquadSpace
+              </span>
+            </Link>
           </div>
           <nav className="flex items-center space-x-2">
             {user ? (

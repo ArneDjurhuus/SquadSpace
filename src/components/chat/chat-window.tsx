@@ -13,11 +13,12 @@ import { Channel, Message, Profile, Reaction } from "@/types"
 interface ChatWindowProps {
   channel: Channel
   currentUser: Profile
+  mobileMenu?: React.ReactNode
 }
 
 const COMMON_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"]
 
-export function ChatWindow({ channel, currentUser }: ChatWindowProps) {
+export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [isUploading, setIsUploading] = useState(false)
@@ -210,6 +211,7 @@ export function ChatWindow({ channel, currentUser }: ChatWindowProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex items-center gap-2">
+        {mobileMenu && <div className="md:hidden">{mobileMenu}</div>}
         <span className="font-bold">#{channel.name}</span>
       </div>
       
