@@ -112,3 +112,50 @@ export async function sendMessage(channelId: string, content: string, imageUrl?:
 
   return { success: true, data }
 }
+
+export async function deleteChannel(channelId: string) {
+  const supabase = await createClient()
+  
+  // Get squad_id for revalidation
+  const { data: channel } = await supabase
+    .from('channels')
+    .select('squad_id')
+    .eq('id', channelId)
+    .single()
+
+  const { error } = await supabase
+    .from('channels')
+    .delete()
+    .eq('id', channelId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  if (channel) {
+    revalidatePath(`/squads/${channel.squad_id}`)
+  }
+  
+  return { success: true }
+}
+
+export async function deleteMessage(messageId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { error } = await supabase
+    .from('messages')
+    .delete()
+    .eq('id', messageId)
+    .eq('sender_id', user.id) // Ensure user owns the message
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true }
+}

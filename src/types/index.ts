@@ -56,3 +56,56 @@ export interface EventParticipant {
   created_at: string
   user?: Profile
 }
+
+export interface Board {
+  id: string
+  squad_id: string
+  name: string
+  created_at: string
+  columns?: Column[]
+}
+
+export interface Column {
+  id: string
+  board_id: string
+  name: string
+  order_index: number
+  created_at: string
+  tasks?: Task[]
+}
+
+export interface Sprint {
+  id: string
+  squad_id: string
+  name: string
+  start_date: string | null
+  end_date: string | null
+  status: 'PLANNED' | 'ACTIVE' | 'COMPLETED'
+  created_at: string
+}
+
+export interface Task {
+  id: string
+  column_id: string
+  sprint_id: string | null
+  title: string
+  description: string | null
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
+  assignee_id: string | null
+  due_date: string | null
+  order_index: number
+  created_at: string
+  updated_at: string
+  assignee?: Profile
+  sprint?: Sprint
+  comments?: TaskComment[]
+}
+
+export interface TaskComment {
+  id: string
+  task_id: string
+  user_id: string
+  content: string
+  created_at: string
+  user?: Profile
+}

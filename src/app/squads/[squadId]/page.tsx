@@ -12,6 +12,8 @@ import { EventList } from "@/components/events/event-list"
 import { CreateEventDialog } from "@/components/events/create-event-dialog"
 import { SquadCalendar } from "@/components/events/squad-calendar"
 import { JoinSquadButton } from "@/components/squads/join-squad-button"
+import { TaskBoard } from "@/components/tasks/task-board"
+import { KanbanSquare } from "lucide-react"
 
 interface SquadMemberResponse {
   id: string
@@ -162,6 +164,10 @@ export default async function SquadPage({ params }: SquadPageProps) {
                 <Calendar className="mr-2 h-4 w-4" />
                 Events
               </TabsTrigger>
+              <TabsTrigger value="tasks">
+                <KanbanSquare className="mr-2 h-4 w-4" />
+                Tasks
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-6 space-y-6">
@@ -251,6 +257,10 @@ export default async function SquadPage({ params }: SquadPageProps) {
                 </div>
                 <EventList events={events} currentUser={currentUser} />
               </div>
+            </TabsContent>
+
+            <TabsContent value="tasks" className="mt-6 h-[calc(100vh-200px)]">
+              <TaskBoard squadId={squadId} members={formattedSquad.members} />
             </TabsContent>
           </Tabs>
         </div>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Background } from "@/components/layout/background";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,9 +35,16 @@ export default function RootLayout({
           spaceGrotesk.variable
         )}
       >
-        <Background />
-        {children}
-        <Toaster richColors />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Background />
+          {children}
+          <Toaster richColors />
+        </ThemeProvider>
       </body>
     </html>
   );

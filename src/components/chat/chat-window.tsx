@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { Send, Image as ImageIcon, Loader2, Smile } from "lucide-react"
+import { Send, Image as ImageIcon, Loader2, Smile, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getMessages, sendMessage, addReaction } from "@/app/actions/chat"
+import { getMessages, sendMessage, addReaction, deleteMessage } from "@/app/actions/chat"
 import { createClient } from "@/utils/supabase/client"
 import { cn } from "@/lib/utils"
 import { Channel, Message, Profile, Reaction } from "@/types"
+import { toast } from "sonner"
 
 interface ChatWindowProps {
   channel: Channel
@@ -105,6 +106,13 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
           })
         })
       })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'messages'
+      }, (payload) => {
+        setMessages(current => current.filter(m => m.id !== payload.old.id))
+      })
       .subscribe((status) => {
         console.log(`Subscription status for channel ${channel.id}:`, status)
       })
@@ -142,6 +150,19 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
     }))
 
     await addReaction(messageId, emoji)
+  }
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!confirm("Delete message?")) return
+    
+    const previousMessages = [...messages]
+    setMessages(current => current.filter(m => m.id !== messageId))
+    
+    const result = await deleteMessage(messageId)
+    if (result.error) {
+      toast.error("Failed to delete message")
+      setMessages(previousMessages)
+    }
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,7 +298,7 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
                 {message.sender?.name?.[0] || "U"}
               </div>
               <div className={cn(
-                "rounded-lg p-3 text-sm",
+                "rounded-lg p-3 text-sm relative group/bubble",
                 isOwn 
                   ? "bg-primary text-primary-foreground" 
                   : "bg-muted"
@@ -297,6 +318,17 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
                   />
                 )}
                 <p>{message.content}</p>
+                
+                {/* Delete Button */}
+                {isOwn && (
+                  <button
+                    onClick={() => handleDeleteMessage(message.id)}
+                    className="absolute -top-2 -left-2 opacity-0 group-hover/bubble:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-1 shadow-sm z-10"
+                    title="Delete message"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
                 
                 {/* Reactions */}
                 {message.reactions && message.reactions.length > 0 && (

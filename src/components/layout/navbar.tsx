@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server"
 
 import { UserNav } from "@/components/layout/user-nav"
 import { MobileNav } from "@/components/layout/mobile-nav"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export async function Navbar() {
   const supabase = await createClient()
@@ -43,6 +44,7 @@ export async function Navbar() {
             </Link>
           </div>
           <nav className="flex items-center space-x-2">
+            <ModeToggle />
             {user ? (
               <>
                 <Link href="/dashboard">

@@ -1,13 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Hash, Volume2 } from "lucide-react"
+import { Plus, Hash, Volume2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { createChannel } from "@/app/actions/chat"
+import { createChannel, deleteChannel } from "@/app/actions/chat"
 import { cn } from "@/lib/utils"
 import { Channel } from "@/types"
+import { toast } from "sonner"
 
 interface ChannelListProps {
   squadId: string
@@ -15,6 +16,7 @@ interface ChannelListProps {
   selectedChannel: Channel | null
   onSelectChannel: (channel: Channel) => void
   onChannelCreated: (channel: Channel) => void
+  onChannelDeleted?: (channelId: string) => void
 }
 
 export function ChannelList({ 
@@ -22,7 +24,8 @@ export function ChannelList({
   channels, 
   selectedChannel, 
   onSelectChannel,
-  onChannelCreated 
+  onChannelCreated,
+  onChannelDeleted
 }: ChannelListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newChannelName, setNewChannelName] = useState("")
@@ -39,11 +42,31 @@ export function ChannelList({
         onChannelCreated(result.data)
         setNewChannelName("")
         setIsDialogOpen(false)
+        toast.success("Channel created")
       }
     } catch (error) {
       console.error("Failed to create channel", error)
+      toast.error("Failed to create channel")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDeleteChannel = async (e: React.MouseEvent, channelId: string) => {
+    e.stopPropagation()
+    if (!confirm("Are you sure you want to delete this channel?")) return
+
+    try {
+      const result = await deleteChannel(channelId)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Channel deleted")
+        if (onChannelDeleted) onChannelDeleted(channelId)
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to delete channel")
     }
   }
 
@@ -78,23 +101,33 @@ export function ChannelList({
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {channels.map((channel) => (
-          <button
+          <div
             key={channel.id}
-            onClick={() => onSelectChannel(channel)}
             className={cn(
-              "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+              "group w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors cursor-pointer",
               selectedChannel?.id === channel.id
                 ? "bg-secondary text-secondary-foreground"
                 : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
+            onClick={() => onSelectChannel(channel)}
           >
-            {channel.type === 'VOICE' ? (
-              <Volume2 className="h-4 w-4" />
-            ) : (
-              <Hash className="h-4 w-4" />
-            )}
-            <span className="truncate">{channel.name}</span>
-          </button>
+            <div className="flex items-center gap-2 overflow-hidden">
+              {channel.type === 'VOICE' ? (
+                <Volume2 className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <Hash className="h-4 w-4 flex-shrink-0" />
+              )}
+              <span className="truncate">{channel.name}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => handleDeleteChannel(e, channel.id)}
+            >
+              <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+            </Button>
+          </div>
         ))}
       </div>
     </div>
