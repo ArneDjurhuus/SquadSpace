@@ -26,7 +26,7 @@ export function ChatLayout({ squadId, initialChannels, currentUser }: ChatLayout
   }
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] border rounded-lg overflow-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex h-[calc(100vh-12rem)] min-h-[500px] border rounded-lg overflow-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="hidden md:block w-64 border-r bg-muted/10">
         <ChannelList 
           squadId={squadId}

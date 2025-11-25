@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Background } from "@/components/layout/background";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,7 +36,7 @@ export default function RootLayout({
       >
         <Background />
         {children}
-
+        <Toaster richColors />
       </body>
     </html>
   );

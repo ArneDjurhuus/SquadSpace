@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation"
 import { createClient } from "@/utils/supabase/server"
 import { Navbar } from "@/components/layout/navbar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Settings, Users, MessageSquare, Calendar } from "lucide-react"
 import { getChannels } from "@/app/actions/chat"
@@ -11,6 +11,7 @@ import { ChatLayout } from "@/components/chat/chat-layout"
 import { EventList } from "@/components/events/event-list"
 import { CreateEventDialog } from "@/components/events/create-event-dialog"
 import { SquadCalendar } from "@/components/events/squad-calendar"
+import { JoinSquadButton } from "@/components/squads/join-squad-button"
 
 interface SquadMemberResponse {
   id: string
@@ -62,16 +63,6 @@ export default async function SquadPage({ params }: SquadPageProps) {
     notFound()
   }
 
-  const isMember = squad.squad_members.some(
-    (member: SquadMemberResponse) => member.user_id === user.id
-  )
-
-  if (!isMember) {
-    // Handle non-members (show join page or redirect)
-    // For now, just redirect to dashboard
-    redirect("/dashboard")
-  }
-
   // Map Supabase response to component structure
   const formattedSquad = {
     ...squad,
@@ -81,6 +72,45 @@ export default async function SquadPage({ params }: SquadPageProps) {
       ...m,
       user: m.profiles
     }))
+  }
+
+  const isMember = squad.squad_members.some(
+    (member: SquadMemberResponse) => member.user_id === user.id
+  )
+
+  if (!isMember) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        <main className="flex-1 container mx-auto py-8 px-4 flex items-center justify-center">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>{formattedSquad.name}</CardTitle>
+              <CardDescription>
+                {formattedSquad.is_private ? "Private Squad" : formattedSquad.description || "No description provided."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  <span>{formattedSquad.members.length} members</span>
+                </div>
+                
+                {formattedSquad.is_private ? (
+                   <div className="bg-muted p-4 rounded-lg text-center space-y-4">
+                    <p className="font-semibold">This squad is private.</p>
+                    <p className="text-sm text-muted-foreground">You need an invite code to join.</p>
+                  </div>
+                ) : (
+                  <JoinSquadButton inviteCode={formattedSquad.inviteCode} />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    )
   }
 
   const channels = await getChannels(squadId)

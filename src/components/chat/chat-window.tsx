@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Send, Image as ImageIcon, Loader2, Smile } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { getMessages, sendMessage, addReaction } from "@/app/actions/chat"
 import { createClient } from "@/utils/supabase/client"
 import { cn } from "@/lib/utils"
@@ -22,6 +23,7 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [isUploading, setIsUploading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [activeReactionMessageId, setActiveReactionMessageId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -29,8 +31,10 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
 
   useEffect(() => {
     const fetchMessages = async () => {
+      setIsLoading(true)
       const data = await getMessages(channel.id)
       setMessages(data as unknown as Message[])
+      setIsLoading(false)
     }
     fetchMessages()
 
@@ -43,6 +47,22 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
         filter: `channel_id=eq.${channel.id}`
       }, async (payload) => {
         console.log('New message received:', payload)
+        
+        // Optimization: If current user sent it, use current profile immediately
+        if (payload.new.sender_id === currentUser.id) {
+          const messageWithProfile = {
+            ...payload.new,
+            sender: currentUser,
+            reactions: []
+          } as unknown as Message
+          
+          setMessages((current) => {
+            if (current.some(m => m.id === payload.new.id)) return current
+            return [...current, messageWithProfile]
+          })
+          return
+        }
+
         const { data, error } = await supabase
           .from('messages')
           .select('*, sender:profiles!sender_id(*), reactions(*)')
@@ -92,7 +112,7 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
     return () => {
       supabase.removeChannel(channelSubscription)
     }
-  }, [channel.id, supabase])
+  }, [channel.id, supabase, currentUser])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -230,16 +250,29 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 space-y-4"
       >
-        {messages.map((message) => {
-          const isOwn = message.sender_id === currentUser.id
-          return (
-            <div 
-              key={message.id} 
-              className={cn(
-                "flex gap-3 max-w-[80%] group relative",
-                isOwn ? "ml-auto flex-row-reverse" : ""
-              )}
-            >
+        {isLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className={cn("flex gap-3 max-w-[80%]", i % 2 === 0 ? "mr-auto" : "ml-auto flex-row-reverse")}>
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-48 rounded-lg" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          messages.map((message) => {
+            const isOwn = message.sender_id === currentUser.id
+            return (
+              <div 
+                key={message.id} 
+                className={cn(
+                  "flex gap-3 max-w-[80%] group relative",
+                  isOwn ? "ml-auto flex-row-reverse" : ""
+                )}
+              >
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold shrink-0">
                 {message.sender?.name?.[0] || "U"}
               </div>
@@ -320,7 +353,7 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
               </div>
             </div>
           )
-        })}
+        }))}
       </div>
 
       <div className="p-4 border-t">

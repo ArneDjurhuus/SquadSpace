@@ -28,17 +28,21 @@ export default async function DashboardPage() {
     .eq('squad_members.user_id', user.id)
     .order('updated_at', { ascending: false })
 
-  // For member count, we can do a separate query or use a postgres function.
-  // For MVP, let's just display the squad without the count or fetch it separately if needed.
-  // Or we can select squad_members(count) but that requires a different structure.
-  
-  // Let's map to the expected format for SquadCard
-  const formattedSquads = squads?.map(squad => ({
-    ...squad,
-    createdAt: new Date(squad.created_at),
-    updatedAt: new Date(squad.updated_at),
-    _count: { members: 0 } // Placeholder until we fix the count query
-  })) || []
+  // Fetch member counts for each squad
+  // Ideally this should be a view or RPC to avoid N+1, but for now this works
+  const squadsWithCounts = squads ? await Promise.all(squads.map(async (squad) => {
+    const { count } = await supabase
+      .from('squad_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('squad_id', squad.id)
+    
+    return {
+      ...squad,
+      createdAt: new Date(squad.created_at),
+      updatedAt: new Date(squad.updated_at),
+      _count: { members: count || 0 }
+    }
+  })) : []
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -59,7 +63,7 @@ export default async function DashboardPage() {
 
         <div className="space-y-6">
           <h2 className="text-xl font-semibold">Your Squads</h2>
-          {formattedSquads.length === 0 ? (
+          {squadsWithCounts.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center animate-in fade-in-50">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                 <svg
@@ -87,7 +91,7 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {formattedSquads.map((squad) => (
+              {squadsWithCounts.map((squad) => (
                 <SquadCard key={squad.id} squad={squad} />
               ))}
             </div>

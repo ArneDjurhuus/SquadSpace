@@ -11,7 +11,7 @@ export default function AuthLayout({
     <div className="relative flex h-screen items-center justify-center">
       <div className="absolute left-4 top-4 md:left-8 md:top-8">
         <Link href="/">
-          <Button variant="ghost" className="text-white hover:text-white/80 hover:bg-slate-900">
+          <Button variant="ghost">
             <ChevronLeft className="mr-2 h-4 w-4" />
             Back to Home
           </Button>

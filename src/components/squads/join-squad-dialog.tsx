@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LogIn } from "lucide-react"
+import { toast } from "sonner"
 
 export function JoinSquadDialog() {
   const router = useRouter()
@@ -46,13 +47,16 @@ export function JoinSquadDialog() {
         throw new Error(text || "Failed to join squad")
       }
 
+      toast.success("Joined squad successfully!")
       setOpen(false)
       router.refresh()
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message)
+        toast.error(err.message)
       } else {
         setError("An error occurred")
+        toast.error("An error occurred")
       }
     } finally {
       setIsLoading(false)

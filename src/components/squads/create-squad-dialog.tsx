@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { PlusCircle } from "lucide-react"
+import { toast } from "sonner"
 
 export function CreateSquadDialog() {
   const router = useRouter()
@@ -53,10 +54,12 @@ export function CreateSquadDialog() {
         throw new Error("Failed to create squad")
       }
 
+      toast.success("Squad created successfully!")
       setOpen(false)
       router.refresh()
     } catch (error) {
       console.error(error)
+      toast.error("Failed to create squad. Please try again.")
     } finally {
       setIsLoading(false)
     }
