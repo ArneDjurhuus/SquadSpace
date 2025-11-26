@@ -1,0 +1,43 @@
+import { SquadType } from "@/types";
+
+export const SQUAD_FEATURES: Record<SquadType, string[]> = {
+  GAMING: ['chat', 'events', 'leaderboard', 'lfg', 'tournaments'],
+  STUDY: ['chat', 'tasks', 'resources', 'timer', 'flashcards', 'quiz'],
+  STARTUP: ['chat', 'tasks', 'roadmap', 'documents', 'investor-updates', 'equity'],
+  CREATIVE: ['chat', 'portfolio', 'critique', 'assets', 'commissions'],
+  SPORTS: ['chat', 'events', 'lineup', 'playbook', 'stats'],
+  BOOK_CLUB: ['chat', 'events', 'reading-list', 'discussions', 'voting'],
+  FITNESS: ['chat', 'challenges', 'progress', 'nutrition', 'workouts'],
+  OTHER: ['chat', 'events', 'tasks'],
+};
+
+export const FEATURE_LABELS: Record<string, string> = {
+  chat: 'Chat',
+  events: 'Events',
+  tasks: 'Tasks',
+  leaderboard: 'Leaderboard',
+  lfg: 'LFG',
+  tournaments: 'Tournaments',
+  resources: 'Resources',
+  timer: 'Timer',
+  flashcards: 'Flashcards',
+  quiz: 'Quiz',
+  roadmap: 'Roadmap',
+  documents: 'Documents',
+  'investor-updates': 'Investor Updates',
+  equity: 'Equity',
+  portfolio: 'Portfolio',
+  critique: 'Critique',
+  assets: 'Assets',
+  commissions: 'Commissions',
+  lineup: 'Lineup',
+  playbook: 'Playbook',
+  stats: 'Stats',
+  'reading-list': 'Reading List',
+  discussions: 'Discussions',
+  voting: 'Voting',
+  challenges: 'Challenges',
+  progress: 'Progress',
+  nutrition: 'Nutrition',
+  workouts: 'Workouts',
+};

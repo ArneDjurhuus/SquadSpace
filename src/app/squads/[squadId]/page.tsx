@@ -14,6 +14,8 @@ import { SquadCalendar } from "@/components/events/squad-calendar"
 import { JoinSquadButton } from "@/components/squads/join-squad-button"
 import { TaskBoard } from "@/components/tasks/task-board"
 import { KanbanSquare } from "lucide-react"
+import { SQUAD_FEATURES, FEATURE_LABELS } from "@/lib/squad-features"
+import { SquadType } from "@/types"
 
 interface SquadMemberResponse {
   id: string
@@ -117,6 +119,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
 
   const channels = await getChannels(squadId)
   const events = await getEvents(squadId)
+  const features = SQUAD_FEATURES[formattedSquad.type as SquadType] || SQUAD_FEATURES.OTHER
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -132,7 +135,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
               </p>
               <div className="flex items-center gap-2 mt-4">
                 <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                  {formattedSquad.category || "Uncategorized"}
+                  {formattedSquad.type || "Uncategorized"}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   {formattedSquad.members.length} members
@@ -152,22 +155,18 @@ export default async function SquadPage({ params }: SquadPageProps) {
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="w-full h-auto flex-wrap justify-start md:w-auto md:flex-nowrap">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="chat">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Chat
-              </TabsTrigger>
               <TabsTrigger value="members">
                 <Users className="mr-2 h-4 w-4" />
                 Members
               </TabsTrigger>
-              <TabsTrigger value="events">
-                <Calendar className="mr-2 h-4 w-4" />
-                Events
-              </TabsTrigger>
-              <TabsTrigger value="tasks">
-                <KanbanSquare className="mr-2 h-4 w-4" />
-                Tasks
-              </TabsTrigger>
+              {features.map(feature => (
+                <TabsTrigger key={feature} value={feature}>
+                  {feature === 'chat' && <MessageSquare className="mr-2 h-4 w-4" />}
+                  {feature === 'events' && <Calendar className="mr-2 h-4 w-4" />}
+                  {feature === 'tasks' && <KanbanSquare className="mr-2 h-4 w-4" />}
+                  {FEATURE_LABELS[feature]}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
             <TabsContent value="overview" className="mt-6 space-y-6">
@@ -241,27 +240,48 @@ export default async function SquadPage({ params }: SquadPageProps) {
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="chat" className="mt-6">
-              <ChatLayout 
-                squadId={squadId} 
-                initialChannels={channels}
-                currentUser={currentUser}
-              />
-            </TabsContent>
 
-            <TabsContent value="events" className="mt-6">
-              <div className="flex flex-col space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold tracking-tight">Upcoming Events</h2>
-                  <CreateEventDialog squadId={squadId} />
+            {features.includes('chat') && (
+              <TabsContent value="chat" className="mt-6">
+                <ChatLayout 
+                  squadId={squadId} 
+                  initialChannels={channels}
+                  currentUser={currentUser}
+                />
+              </TabsContent>
+            )}
+
+            {features.includes('events') && (
+              <TabsContent value="events" className="mt-6">
+                <div className="flex flex-col space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold tracking-tight">Upcoming Events</h2>
+                    <CreateEventDialog squadId={squadId} />
+                  </div>
+                  <EventList events={events} currentUser={currentUser} />
                 </div>
-                <EventList events={events} currentUser={currentUser} />
-              </div>
-            </TabsContent>
+              </TabsContent>
+            )}
 
-            <TabsContent value="tasks" className="mt-6 h-[calc(100vh-200px)]">
-              <TaskBoard squadId={squadId} members={formattedSquad.members} />
-            </TabsContent>
+            {features.includes('tasks') && (
+              <TabsContent value="tasks" className="mt-6 h-[calc(100vh-200px)]">
+                <TaskBoard squadId={squadId} members={formattedSquad.members} />
+              </TabsContent>
+            )}
+
+            {features.filter(f => !['chat', 'events', 'tasks'].includes(f)).map(feature => (
+              <TabsContent key={feature} value={feature} className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{FEATURE_LABELS[feature]}</CardTitle>
+                    <CardDescription>Feature coming soon...</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p>This feature is enabled for {formattedSquad.type} squads.</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            ))}
           </Tabs>
         </div>
       </main>

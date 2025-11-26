@@ -36,7 +36,7 @@ export function CreateSquadDialog() {
     const formData = new FormData(event.currentTarget)
     const name = formData.get("name")
     const description = formData.get("description")
-    const category = formData.get("category")
+    const type = formData.get("type")
 
     try {
       const response = await fetch("/api/squads", {
@@ -45,7 +45,7 @@ export function CreateSquadDialog() {
         body: JSON.stringify({
           name,
           description,
-          category,
+          type,
           isPrivate: false, // Default to public for now
         }),
       })
@@ -106,20 +106,22 @@ export function CreateSquadDialog() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right">
-                Category
+              <Label htmlFor="type" className="text-right">
+                Type
               </Label>
-              <Select name="category">
+              <Select name="type" defaultValue="OTHER">
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Gaming">Gaming</SelectItem>
-                  <SelectItem value="Professional">Professional</SelectItem>
-                  <SelectItem value="Educational">Educational</SelectItem>
-                  <SelectItem value="Creative">Creative</SelectItem>
-                  <SelectItem value="Sports">Sports</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="GAMING">Gaming Squad</SelectItem>
+                  <SelectItem value="STUDY">Study Group</SelectItem>
+                  <SelectItem value="STARTUP">Startup Team</SelectItem>
+                  <SelectItem value="CREATIVE">Creative Collective</SelectItem>
+                  <SelectItem value="SPORTS">Sports Team</SelectItem>
+                  <SelectItem value="BOOK_CLUB">Book Club</SelectItem>
+                  <SelectItem value="FITNESS">Fitness Group</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

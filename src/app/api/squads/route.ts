@@ -5,7 +5,7 @@ import { z } from "zod";
 const createSquadSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  category: z.string().optional(),
+  type: z.enum(['GAMING', 'STUDY', 'STARTUP', 'CREATIVE', 'SPORTS', 'BOOK_CLUB', 'FITNESS', 'OTHER']).default('OTHER'),
   isPrivate: z.boolean().default(false),
 });
 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, description, category, isPrivate } = createSquadSchema.parse(body);
+    const { name, description, type, isPrivate } = createSquadSchema.parse(body);
 
     // 1. Create Squad
     const { data: squad, error: squadError } = await supabase
@@ -27,9 +27,10 @@ export async function POST(req: Request) {
       .insert({
         name,
         description,
-        category,
+        type,
         is_private: isPrivate,
         owner_id: user.id,
+        settings: {},
       })
       .select()
       .single();

@@ -109,3 +109,44 @@ export interface TaskComment {
   created_at: string
   user?: Profile
 }
+
+export type SquadType = 'GAMING' | 'STUDY' | 'STARTUP' | 'CREATIVE' | 'SPORTS' | 'BOOK_CLUB' | 'FITNESS' | 'OTHER';
+
+export interface SquadSettings {
+  // Gaming
+  gameTitle?: string;
+  platform?: string;
+  // Study
+  subject?: string;
+  institution?: string;
+  // Startup
+  githubRepo?: string;
+  websiteUrl?: string;
+  // Creative
+  portfolioUrl?: string;
+  // Sports
+  sport?: string;
+  teamName?: string;
+  // Book Club
+  currentBook?: string;
+  // Fitness
+  activityType?: string;
+  // Common
+  enabledModules?: string[];
+}
+
+export interface Squad {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  type: SquadType;
+  settings: SquadSettings;
+  invite_code: string;
+  is_private: boolean;
+  capacity: number;
+  image: string | null;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
+}

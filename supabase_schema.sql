@@ -29,6 +29,8 @@ create table public.squads (
   name text not null,
   description text,
   category text,
+  type text default 'OTHER' check (type in ('GAMING', 'STUDY', 'STARTUP', 'CREATIVE', 'SPORTS', 'BOOK_CLUB', 'FITNESS', 'OTHER')),
+  settings jsonb default '{}'::jsonb,
   invite_code text unique default encode(gen_random_bytes(6), 'hex'),
   is_private boolean default false,
   capacity int default 50,
