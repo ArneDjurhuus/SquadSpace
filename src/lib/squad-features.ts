@@ -1,13 +1,13 @@
 import { SquadType } from "@/types";
 
 export const SQUAD_FEATURES: Record<SquadType, string[]> = {
-  GAMING: ['chat', 'events', 'leaderboard', 'lfg', 'tournaments'],
-  STUDY: ['chat', 'tasks', 'resources', 'timer', 'flashcards', 'quiz'],
-  STARTUP: ['chat', 'tasks', 'roadmap', 'documents', 'investor-updates', 'equity'],
-  CREATIVE: ['chat', 'portfolio', 'critique', 'assets', 'commissions'],
-  SPORTS: ['chat', 'events', 'lineup', 'playbook', 'stats'],
-  BOOK_CLUB: ['chat', 'events', 'reading-list', 'discussions', 'voting'],
-  FITNESS: ['chat', 'challenges', 'progress', 'nutrition', 'workouts'],
+  GAMING: ['chat', 'events', 'tasks', 'leaderboard', 'lfg', 'tournaments'],
+  STUDY: ['chat', 'events', 'tasks', 'resources', 'timer', 'flashcards', 'quiz'],
+  STARTUP: ['chat', 'events', 'tasks', 'roadmap', 'documents', 'investor-updates', 'equity'],
+  CREATIVE: ['chat', 'events', 'tasks', 'portfolio', 'critique', 'assets', 'commissions'],
+  SPORTS: ['chat', 'events', 'tasks', 'lineup', 'playbook', 'stats'],
+  BOOK_CLUB: ['chat', 'events', 'tasks', 'reading-list', 'discussions', 'voting'],
+  FITNESS: ['chat', 'events', 'tasks', 'challenges', 'progress', 'nutrition', 'workouts'],
   OTHER: ['chat', 'events', 'tasks'],
 };
 

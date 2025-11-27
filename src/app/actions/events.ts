@@ -10,17 +10,17 @@ export async function getEvents(squadId: string) {
     .from('events')
     .select(`
       *,
-      creator:created_by(*),
+      creator:profiles(*),
       participants:event_participants(
         *,
-        user:user_id(*)
+        user:profiles(*)
       )
     `)
     .eq('squad_id', squadId)
     .order('start_time', { ascending: true })
 
   if (error) {
-    console.error('Error fetching events:', error)
+    console.error('Error fetching events:', JSON.stringify(error, null, 2))
     return []
   }
 

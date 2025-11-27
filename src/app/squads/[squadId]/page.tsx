@@ -17,6 +17,13 @@ import { KanbanSquare } from "lucide-react"
 import { SQUAD_FEATURES, FEATURE_LABELS } from "@/lib/squad-features"
 import { SquadType } from "@/types"
 
+// Feature Components
+import { Leaderboard } from "@/components/features/gaming/leaderboard"
+import { LFGBoard } from "@/components/features/gaming/lfg-board"
+import { Flashcards } from "@/components/features/study/flashcards"
+import { StudyTimer } from "@/components/features/study/study-timer"
+import { Roadmap } from "@/components/features/startup/roadmap"
+
 interface SquadMemberResponse {
   id: string
   user_id: string
@@ -271,15 +278,23 @@ export default async function SquadPage({ params }: SquadPageProps) {
 
             {features.filter(f => !['chat', 'events', 'tasks'].includes(f)).map(feature => (
               <TabsContent key={feature} value={feature} className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{FEATURE_LABELS[feature]}</CardTitle>
-                    <CardDescription>Feature coming soon...</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p>This feature is enabled for {formattedSquad.type} squads.</p>
-                  </CardContent>
-                </Card>
+                {feature === 'leaderboard' && <Leaderboard squadId={squadId} />}
+                {feature === 'lfg' && <LFGBoard squadId={squadId} />}
+                {feature === 'flashcards' && <Flashcards squadId={squadId} />}
+                {feature === 'timer' && <StudyTimer squadId={squadId} />}
+                {feature === 'roadmap' && <Roadmap squadId={squadId} />}
+                
+                {!['leaderboard', 'lfg', 'flashcards', 'timer', 'roadmap'].includes(feature) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{FEATURE_LABELS[feature]}</CardTitle>
+                      <CardDescription>Feature coming soon...</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p>This feature is enabled for {formattedSquad.type} squads.</p>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
             ))}
           </Tabs>

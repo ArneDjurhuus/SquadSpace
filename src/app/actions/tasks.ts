@@ -14,7 +14,7 @@ export async function getBoards(squadId: string) {
     .order('created_at', { ascending: true })
 
   if (error) {
-    console.error('Error fetching boards:', error)
+    console.error('Error fetching boards:', JSON.stringify(error, null, 2))
     return []
   }
 
@@ -58,7 +58,7 @@ export async function getBoardData(boardId: string, sprintId?: string | null) {
     .order('order_index', { ascending: true })
 
   if (columnsError) {
-    console.error('Error fetching columns:', columnsError)
+    console.error('Error fetching columns:', JSON.stringify(columnsError, null, 2))
     return { columns: [], tasks: [] }
   }
 
@@ -68,7 +68,7 @@ export async function getBoardData(boardId: string, sprintId?: string | null) {
     .select(`
       *,
       assignee:profiles!assignee_id(*),
-      sprint:sprints(*)
+      sprint:sprints!sprint_id(*)
     `)
     .in('column_id', columns.map(c => c.id))
     .order('order_index', { ascending: true })
@@ -83,7 +83,7 @@ export async function getBoardData(boardId: string, sprintId?: string | null) {
   const { data: tasks, error: tasksError } = await query
 
   if (tasksError) {
-    console.error('Error fetching tasks:', tasksError)
+    console.error('Error fetching tasks:', JSON.stringify(tasksError, null, 2))
     return { columns, tasks: [] }
   }
 

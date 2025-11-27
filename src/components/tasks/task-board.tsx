@@ -64,9 +64,12 @@ export function TaskBoard({ squadId, members }: TaskBoardProps) {
         setTasks(tasks)
       } else {
         // Create default board if none exists
-        const { data } = await createBoard(squadId, "General")
-        if (data) {
-          const newBoard = data as Board
+        const result = await createBoard(squadId, "General")
+        if (result.error) {
+          toast.error("Failed to create board: " + result.error)
+          console.error("Create board error:", result.error)
+        } else if (result.data) {
+          const newBoard = result.data as Board
           setBoards([newBoard])
           setActiveBoard(newBoard)
           const { columns, tasks } = await getBoardData(newBoard.id)

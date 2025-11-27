@@ -28,6 +28,7 @@ export function CreateSquadDialog() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedType, setSelectedType] = useState("OTHER")
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -36,8 +37,7 @@ export function CreateSquadDialog() {
     const formData = new FormData(event.currentTarget)
     const name = formData.get("name")
     const description = formData.get("description")
-    const type = formData.get("type")
-
+    
     try {
       const response = await fetch("/api/squads", {
         method: "POST",
@@ -45,7 +45,7 @@ export function CreateSquadDialog() {
         body: JSON.stringify({
           name,
           description,
-          type,
+          type: selectedType,
           isPrivate: false, // Default to public for now
         }),
       })
@@ -109,7 +109,7 @@ export function CreateSquadDialog() {
               <Label htmlFor="type" className="text-right">
                 Type
               </Label>
-              <Select name="type" defaultValue="OTHER">
+              <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
