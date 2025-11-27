@@ -91,6 +91,7 @@ export async function getBoardData(boardId: string, sprintId?: string | null) {
 }
 
 export async function createTask(data: {
+  squadId: string
   column_id: string
   title: string
   description?: string
@@ -112,20 +113,26 @@ export async function createTask(data: {
 
   const newOrderIndex = (maxOrder?.order_index ?? -1) + 1
 
+  const { squadId, ...taskData } = data
+
   const { data: task, error } = await supabase
     .from('tasks')
     .insert({
-      ...data,
+      ...taskData,
       order_index: newOrderIndex
     })
-    .select()
+    .select(`
+      *,
+      assignee:profiles!assignee_id(*),
+      sprint:sprints!sprint_id(*)
+    `)
     .single()
 
   if (error) {
     return { error: error.message }
   }
 
-  revalidatePath('/squads/[squadId]', 'page')
+  revalidatePath(`/squads/${squadId}`)
   return { data: task }
 }
 

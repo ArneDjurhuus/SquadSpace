@@ -25,6 +25,7 @@ import { toast } from "sonner"
 import { Task, Profile, Sprint } from "@/types"
 
 interface CreateTaskDialogProps {
+  squadId: string
   open: boolean
   onOpenChange: (open: boolean) => void
   columnId: string | null
@@ -34,6 +35,7 @@ interface CreateTaskDialogProps {
 }
 
 export function CreateTaskDialog({ 
+  squadId,
   open, 
   onOpenChange, 
   columnId, 
@@ -52,6 +54,7 @@ export function CreateTaskDialog({
     
     try {
       const result = await createTask({
+        squadId,
         column_id: columnId,
         title: formData.get("title") as string,
         description: formData.get("description") as string,

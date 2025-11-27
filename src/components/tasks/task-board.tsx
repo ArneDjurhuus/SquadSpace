@@ -240,6 +240,7 @@ export function TaskBoard({ squadId, members }: TaskBoardProps) {
       </DndContext>
 
       <CreateTaskDialog
+        squadId={squadId}
         open={isCreateTaskOpen}
         onOpenChange={setIsCreateTaskOpen}
         columnId={createTaskColumnId}

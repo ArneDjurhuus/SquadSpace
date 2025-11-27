@@ -142,7 +142,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
               </p>
               <div className="flex items-center gap-2 mt-4">
                 <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                  {formattedSquad.type || "Uncategorized"}
+                  {formattedSquad.type ? (formattedSquad.type.charAt(0) + formattedSquad.type.slice(1).toLowerCase().replace(/_/g, ' ')) : "Uncategorized"}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   {formattedSquad.members.length} members

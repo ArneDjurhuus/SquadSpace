@@ -8,11 +8,17 @@ interface SquadCardProps {
     id: string
     name: string
     description: string | null
-    category: string | null
+    type?: string | null
+    category?: string | null
     _count: {
       members: number
     }
   }
+}
+
+function formatType(type?: string | null) {
+  if (!type) return "Uncategorized"
+  return type.charAt(0) + type.slice(1).toLowerCase().replace(/_/g, ' ')
 }
 
 export function SquadCard({ squad }: SquadCardProps) {
@@ -22,7 +28,7 @@ export function SquadCard({ squad }: SquadCardProps) {
         <div className="flex justify-between items-start">
           <div>
             <CardTitle>{squad.name}</CardTitle>
-            <CardDescription>{squad.category || "Uncategorized"}</CardDescription>
+            <CardDescription>{formatType(squad.type)}</CardDescription>
           </div>
         </div>
       </CardHeader>

@@ -1,3 +1,7 @@
+-- Reset Events Schema
+drop table if exists public.event_participants cascade;
+drop table if exists public.events cascade;
+
 -- Create Events table
 create table public.events (
   id uuid default uuid_generate_v4() primary key,
