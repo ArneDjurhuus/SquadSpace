@@ -23,6 +23,7 @@ import { LFGBoard } from "@/components/features/gaming/lfg-board"
 import { Flashcards } from "@/components/features/study/flashcards"
 import { StudyTimer } from "@/components/features/study/study-timer"
 import { Roadmap } from "@/components/features/startup/roadmap"
+import { SquadThemeProvider } from "@/components/squads/squad-theme-provider"
 
 interface SquadMemberResponse {
   id: string
@@ -89,15 +90,23 @@ export default async function SquadPage({ params }: SquadPageProps) {
     (member: SquadMemberResponse) => member.user_id === user.id
   )
 
+  const theme = squad.settings?.theme
+
   if (!isMember) {
     return (
-      <div className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1 container mx-auto py-8 px-4 flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>{formattedSquad.name}</CardTitle>
-              <CardDescription>
+      <SquadThemeProvider theme={theme}>
+        <div className="flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex-1 container mx-auto py-8 px-4 flex items-center justify-center">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                {squad.banner_url && (
+                  <div className="w-full h-32 rounded-t-lg overflow-hidden mb-4">
+                    <img src={squad.banner_url} alt="Squad Banner" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <CardTitle>{formattedSquad.name}</CardTitle>
+                <CardDescription>
                 {formattedSquad.is_private ? "Private Squad" : formattedSquad.description || "No description provided."}
               </CardDescription>
             </CardHeader>
@@ -121,6 +130,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
           </Card>
         </main>
       </div>
+      </SquadThemeProvider>
     )
   }
 
@@ -129,34 +139,70 @@ export default async function SquadPage({ params }: SquadPageProps) {
   const features = SQUAD_FEATURES[formattedSquad.type as SquadType] || SQUAD_FEATURES.OTHER
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto py-8 px-4">
-        <div className="flex flex-col gap-8">
-          {/* Squad Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight">{formattedSquad.name}</h1>
-              <p className="text-muted-foreground mt-2 text-lg">
-                {formattedSquad.description || "No description provided."}
-              </p>
-              <div className="flex items-center gap-2 mt-4">
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                  {formattedSquad.type ? (formattedSquad.type.charAt(0) + formattedSquad.type.slice(1).toLowerCase().replace(/_/g, ' ')) : "Uncategorized"}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {formattedSquad.members.length} members
-                </span>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-              <Button>Invite Members</Button>
+    <SquadThemeProvider theme={theme}>
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        {squad.banner_url && (
+          <div className="w-full h-48 md:h-64 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10" />
+            <img src={squad.banner_url} alt="Squad Banner" className="w-full h-full object-cover" />
+            <div className="absolute bottom-0 left-0 p-6 z-20 container mx-auto">
+              <h1 className="text-4xl font-bold text-white drop-shadow-md">{formattedSquad.name}</h1>
             </div>
           </div>
+        )}
+        <main className="flex-1 container mx-auto py-8 px-4">
+          <div className="flex flex-col gap-8">
+            {/* Squad Header */}
+            {!squad.banner_url && (
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h1 className="text-4xl font-bold tracking-tight">{formattedSquad.name}</h1>
+                  <p className="text-muted-foreground mt-2 text-lg">
+                    {formattedSquad.description || "No description provided."}
+                  </p>
+                  <div className="flex items-center gap-2 mt-4">
+                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                      {formattedSquad.type ? (formattedSquad.type.charAt(0) + formattedSquad.type.slice(1).toLowerCase().replace(/_/g, ' ')) : "Uncategorized"}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {formattedSquad.members.length} members
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                  <Button>Invite Members</Button>
+                </div>
+              </div>
+            )}
+            {squad.banner_url && (
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <p className="text-muted-foreground text-lg">
+                    {formattedSquad.description || "No description provided."}
+                  </p>
+                   <div className="flex items-center gap-2 mt-4">
+                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                      {formattedSquad.type ? (formattedSquad.type.charAt(0) + formattedSquad.type.slice(1).toLowerCase().replace(/_/g, ' ')) : "Uncategorized"}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {formattedSquad.members.length} members
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                  <Button>Invite Members</Button>
+                </div>
+              </div>
+            )}
 
           {/* Content Tabs */}
           <Tabs defaultValue="overview" className="w-full">
@@ -279,7 +325,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
             {features.filter(f => !['chat', 'events', 'tasks'].includes(f)).map(feature => (
               <TabsContent key={feature} value={feature} className="mt-6">
                 {feature === 'leaderboard' && <Leaderboard squadId={squadId} />}
-                {feature === 'lfg' && <LFGBoard squadId={squadId} />}
+                {feature === 'lfg' && <LFGBoard squadId={squadId} currentUserId={currentUser.id} />}
                 {feature === 'flashcards' && <Flashcards squadId={squadId} />}
                 {feature === 'timer' && <StudyTimer squadId={squadId} />}
                 {feature === 'roadmap' && <Roadmap squadId={squadId} />}
@@ -301,5 +347,6 @@ export default async function SquadPage({ params }: SquadPageProps) {
         </div>
       </main>
     </div>
+    </SquadThemeProvider>
   )
 }

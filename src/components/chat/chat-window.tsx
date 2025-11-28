@@ -28,7 +28,7 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
   const [activeReactionMessageId, setActiveReactionMessageId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   useEffect(() => {
     const fetchMessages = async () => {

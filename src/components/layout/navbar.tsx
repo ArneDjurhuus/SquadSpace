@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server"
 import { UserNav } from "@/components/layout/user-nav"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { ModeToggle } from "@/components/mode-toggle"
+import { NotificationsPopover } from "@/components/layout/notifications-popover"
 
 export async function Navbar() {
   const supabase = await createClient()
@@ -47,6 +48,7 @@ export async function Navbar() {
             <ModeToggle />
             {user ? (
               <>
+                <NotificationsPopover />
                 <Link href="/dashboard">
                   <Button size="sm">
                     Dashboard
