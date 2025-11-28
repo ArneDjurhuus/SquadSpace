@@ -17,6 +17,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { createEvent } from "@/app/actions/events"
 import { Plus } from "lucide-react"
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 interface CreateEventDialogProps {
   squadId: string
 }
@@ -120,6 +128,42 @@ export function CreateEventDialog({ squadId }: CreateEventDialogProps) {
                 Location
               </Label>
               <Input id="location" name="location" className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="meetingUrl" className="text-right">
+                Meeting URL
+              </Label>
+              <Input id="meetingUrl" name="meetingUrl" className="col-span-3" placeholder="https://..." />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right">
+                Category
+              </Label>
+              <div className="col-span-3">
+                <Select name="category">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="social">Social</SelectItem>
+                    <SelectItem value="work">Work</SelectItem>
+                    <SelectItem value="gaming">Gaming</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="maxParticipants" className="text-right">
+                Max People
+              </Label>
+              <Input 
+                id="maxParticipants" 
+                name="maxParticipants" 
+                type="number" 
+                min="1"
+                className="col-span-3" 
+              />
             </div>
           </div>
           {error && <p className="text-sm text-red-500 mb-4">{error}</p>}

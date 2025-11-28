@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { Calendar, Clock, MapPin, Users } from "lucide-react"
+import { Calendar, Clock, MapPin, Users, Video } from "lucide-react"
 import { Event, Profile } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { rsvpToEvent, deleteEvent } from "@/app/actions/events"
 
 interface EventCardProps {
@@ -21,12 +22,16 @@ export function EventCard({ event, currentUser }: EventCardProps) {
   const userRsvp = event.participants?.find(p => p.user_id === currentUser?.id)?.status
   const goingCount = event.participants?.filter(p => p.status === 'going').length || 0
   const maybeCount = event.participants?.filter(p => p.status === 'maybe').length || 0
+  const waitlistCount = event.participants?.filter(p => p.status === 'waitlist').length || 0
 
   const handleRsvp = async (status: 'going' | 'maybe' | 'not_going') => {
     if (!currentUser) return
     setIsRsvping(true)
     try {
-      await rsvpToEvent(event.id, status)
+      const result = await rsvpToEvent(event.id, status)
+      if (result.status === 'waitlist') {
+        alert("Event is full. You have been added to the waitlist.")
+      }
     } finally {
       setIsRsvping(false)
     }
@@ -48,7 +53,16 @@ export function EventCard({ event, currentUser }: EventCardProps) {
     <Card>
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{event.title}</CardTitle>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-xl">{event.title}</CardTitle>
+              {event.category && (
+                <Badge variant="secondary" className="capitalize">
+                  {event.category}
+                </Badge>
+              )}
+            </div>
+          </div>
           {isCreator && (
             <Button 
               variant="destructive" 
@@ -75,6 +89,14 @@ export function EventCard({ event, currentUser }: EventCardProps) {
               {event.location}
             </div>
           )}
+          {event.meeting_url && (
+            <div className="flex items-center">
+              <Video className="mr-2 h-4 w-4" />
+              <a href={event.meeting_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                Join Meeting
+              </a>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -83,11 +105,17 @@ export function EventCard({ event, currentUser }: EventCardProps) {
         <div className="flex items-center space-x-4 text-sm">
           <div className="flex items-center">
             <Users className="mr-2 h-4 w-4" />
-            <span className="font-semibold mr-1">{goingCount}</span> going
+            <span className="font-semibold mr-1">{goingCount}</span> 
+            {event.max_participants ? ` / ${event.max_participants}` : ''} going
           </div>
           <div className="text-muted-foreground">
             <span className="font-semibold mr-1">{maybeCount}</span> maybe
           </div>
+          {waitlistCount > 0 && (
+            <div className="text-orange-500">
+              <span className="font-semibold mr-1">{waitlistCount}</span> on waitlist
+            </div>
+          )}
         </div>
 
         <div className="mt-4 flex -space-x-2 overflow-hidden">
@@ -107,15 +135,16 @@ export function EventCard({ event, currentUser }: EventCardProps) {
       <CardFooter className="flex justify-between border-t p-4">
         <div className="flex space-x-2 w-full">
           <Button 
-            variant={userRsvp === 'going' ? "default" : "outline"} 
+            variant={userRsvp === 'going' || userRsvp === 'waitlist' ? "default" : "outline"} 
             className="flex-1"
             onClick={() => handleRsvp('going')}
             disabled={isRsvping}
           >
-            Going
+            {userRsvp === 'waitlist' ? 'Waitlisted' : 
+             (!userRsvp && event.max_participants && goingCount >= event.max_participants) ? 'Join Waitlist' : 'Going'}
           </Button>
           <Button 
-            variant={userRsvp === 'maybe' ? "default" : "outline"} 
+            variant={userRsvp === 'maybe' ? "default" : "outline"}
             className="flex-1"
             onClick={() => handleRsvp('maybe')}
             disabled={isRsvping}
@@ -123,7 +152,7 @@ export function EventCard({ event, currentUser }: EventCardProps) {
             Maybe
           </Button>
           <Button 
-            variant={userRsvp === 'not_going' ? "default" : "outline"} 
+            variant={userRsvp === 'not_going' ? "default" : "outline"}
             className="flex-1"
             onClick={() => handleRsvp('not_going')}
             disabled={isRsvping}

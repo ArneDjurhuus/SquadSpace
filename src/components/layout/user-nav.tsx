@@ -19,6 +19,7 @@ import {
 import { signOut } from "@/app/actions/auth"
 import { User } from "@supabase/supabase-js"
 import { LogOut, Settings, User as UserIcon } from "lucide-react"
+import Link from "next/link"
 
 interface UserNavProps {
   user: User
@@ -51,10 +52,12 @@ export function UserNav({ user }: UserNavProps) {
             <span>Profile</span>
             <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/settings">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+              <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

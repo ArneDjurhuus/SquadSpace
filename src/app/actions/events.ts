@@ -40,6 +40,9 @@ export async function createEvent(squadId: string, formData: FormData) {
   const startTime = formData.get('startTime') as string
   const endTime = formData.get('endTime') as string
   const location = formData.get('location') as string
+  const meetingUrl = formData.get('meetingUrl') as string
+  const category = formData.get('category') as string
+  const maxParticipants = formData.get('maxParticipants') ? parseInt(formData.get('maxParticipants') as string) : null
 
   const { error } = await supabase
     .from('events')
@@ -51,6 +54,9 @@ export async function createEvent(squadId: string, formData: FormData) {
       start_time: startTime,
       end_time: endTime,
       location,
+      meeting_url: meetingUrl,
+      category,
+      max_participants: maxParticipants,
     })
 
   if (error) {
@@ -69,6 +75,32 @@ export async function rsvpToEvent(eventId: string, status: 'going' | 'maybe' | '
     return { error: 'Not authenticated' }
   }
 
+  // Get event details for max_participants check
+  const { data: eventData, error: eventError } = await supabase
+    .from('events')
+    .select('max_participants, squad_id')
+    .eq('id', eventId)
+    .single()
+    
+  if (eventError || !eventData) {
+      return { error: 'Event not found' }
+  }
+
+  let finalStatus: string = status
+
+  // Check capacity if trying to go
+  if (status === 'going' && eventData.max_participants) {
+      const { count } = await supabase
+          .from('event_participants')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', eventId)
+          .eq('status', 'going')
+      
+      if (count !== null && count >= eventData.max_participants) {
+          finalStatus = 'waitlist'
+      }
+  }
+
   // Check if already RSVPed
   const { data: existing } = await supabase
     .from('event_participants')
@@ -81,7 +113,7 @@ export async function rsvpToEvent(eventId: string, status: 'going' | 'maybe' | '
   if (existing) {
     const result = await supabase
       .from('event_participants')
-      .update({ status })
+      .update({ status: finalStatus })
       .eq('id', existing.id)
     error = result.error
   } else {
@@ -90,7 +122,7 @@ export async function rsvpToEvent(eventId: string, status: 'going' | 'maybe' | '
       .insert({
         event_id: eventId,
         user_id: user.id,
-        status,
+        status: finalStatus,
       })
     error = result.error
   }
@@ -99,18 +131,9 @@ export async function rsvpToEvent(eventId: string, status: 'going' | 'maybe' | '
     return { error: error.message }
   }
 
-  revalidatePath(`/squads/[squadId]`) // Note: We might not know the squadId here easily without passing it or fetching it. 
-  // Ideally we should revalidate the specific path where events are shown.
-  // For now, we'll rely on client-side updates or broad revalidation if possible, 
-  // but since we don't have squadId, we might need to pass it or fetch it.
-  // Let's fetch the event to get the squad_id for proper revalidation.
+  revalidatePath(`/squads/${eventData.squad_id}`)
   
-  const { data: event } = await supabase.from('events').select('squad_id').eq('id', eventId).single()
-  if (event) {
-    revalidatePath(`/squads/${event.squad_id}`)
-  }
-  
-  return { success: true }
+  return { success: true, status: finalStatus }
 }
 
 export async function deleteEvent(eventId: string) {

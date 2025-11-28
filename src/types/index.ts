@@ -42,17 +42,71 @@ export interface Event {
   start_time: string
   end_time: string
   location: string | null
+  is_template: boolean
+  template_name: string | null
+  coordinates: { lat: number; lng: number } | null
+  check_in_code: string | null
+  max_participants: number | null
+  meeting_url: string | null
+  category: string | null
+  recurrence_rule: string | null
+  timezone: string | null
   created_at: string
   updated_at: string
   creator?: Profile
   participants?: EventParticipant[]
+  agenda?: EventAgendaItem[]
 }
 
 export interface EventParticipant {
   id: string
   event_id: string
   user_id: string
-  status: 'going' | 'maybe' | 'not_going'
+  status: 'going' | 'maybe' | 'not_going' | 'waitlist'
+  checked_in_at: string | null
+  created_at: string
+  user?: Profile
+}
+
+export interface EventAgendaItem {
+  id: string
+  event_id: string
+  title: string
+  description: string | null
+  start_time: string | null
+  end_time: string | null
+  presenter_id: string | null
+  order_index: number
+  created_at: string
+  presenter?: Profile
+}
+
+export interface AvailabilityPoll {
+  id: string
+  squad_id: string
+  created_by: string
+  title: string
+  description: string | null
+  created_at: string
+  updated_at: string
+  slots?: AvailabilitySlot[]
+  creator?: Profile
+}
+
+export interface AvailabilitySlot {
+  id: string
+  poll_id: string
+  start_time: string
+  end_time: string
+  responses?: AvailabilityResponse[]
+}
+
+export interface AvailabilityResponse {
+  id: string
+  poll_id: string
+  user_id: string
+  slot_id: string
+  status: 'available' | 'if_needed'
   created_at: string
   user?: Profile
 }
