@@ -24,7 +24,7 @@ export function Leaderboard({ squadId }: { squadId: string }) {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       const data = await getLeaderboard(squadId)
-      setEntries(data as any)
+      setEntries(data as LeaderboardEntry[])
       setIsLoading(false)
     }
     fetchLeaderboard()

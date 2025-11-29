@@ -26,6 +26,8 @@ import { Roadmap } from "@/components/features/startup/roadmap"
 import { SquadThemeProvider } from "@/components/squads/squad-theme-provider"
 import { DocumentList } from "@/components/features/shared/documents/document-list"
 import { getDocuments } from "@/app/actions/documents"
+import { Tournaments } from "@/components/features/gaming/tournaments"
+import { getTournaments } from "@/app/actions/tournaments"
 
 interface SquadMemberResponse {
   id: string
@@ -104,6 +106,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
               <CardHeader>
                 {squad.banner_url && (
                   <div className="w-full h-32 rounded-t-lg overflow-hidden mb-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={squad.banner_url} alt="Squad Banner" className="w-full h-full object-cover" />
                   </div>
                 )}
@@ -139,6 +142,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
   const channels = await getChannels(squadId)
   const events = await getEvents(squadId)
   const documents = await getDocuments(squadId)
+  const tournaments = await getTournaments(squadId)
   const features = SQUAD_FEATURES[formattedSquad.type as SquadType] || SQUAD_FEATURES.OTHER
 
   return (
@@ -148,6 +152,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
         {squad.banner_url && (
           <div className="w-full h-48 md:h-64 overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={squad.banner_url} alt="Squad Banner" className="w-full h-full object-cover" />
             <div className="absolute bottom-0 left-0 p-6 z-20 container mx-auto">
               <h1 className="text-4xl font-bold text-white drop-shadow-md">{formattedSquad.name}</h1>
@@ -329,6 +334,8 @@ export default async function SquadPage({ params }: SquadPageProps) {
               <TabsContent key={feature} value={feature} className="mt-6">
                 {feature === 'leaderboard' && <Leaderboard squadId={squadId} />}
                 {feature === 'lfg' && <LFGBoard squadId={squadId} currentUserId={currentUser.id} />}
+                {feature === 'tournaments' && <Tournaments squadId={squadId} tournaments={tournaments} currentUserId={currentUser.id} />}
+                {feature === 'flashcards' && <Flashcards squadId={squadId} />}
                 {feature === 'timer' && <StudyTimer squadId={squadId} />}
                 {feature === 'roadmap' && <Roadmap squadId={squadId} />}
                 {(feature === 'documents' || feature === 'resources') && (
@@ -339,7 +346,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
                   />
                 )}
                 
-                {!['leaderboard', 'lfg', 'flashcards', 'timer', 'roadmap', 'documents', 'resources'].includes(feature) && (
+                {!['leaderboard', 'lfg', 'tournaments', 'flashcards', 'timer', 'roadmap', 'documents', 'resources'].includes(feature) && (
                   <Card>
                     <CardHeader>
                       <CardTitle>{FEATURE_LABELS[feature]}</CardTitle>

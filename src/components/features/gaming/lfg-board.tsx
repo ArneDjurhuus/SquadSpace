@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Users, Clock, Plus, LogOut } from "lucide-react"
+import { Clock, Plus, LogOut } from "lucide-react"
 import { getLFGPosts, createLFGPost, joinLFGPost, leaveLFGPost, deleteLFGPost } from "@/app/actions/gaming"
 import { toast } from "sonner"
 
@@ -33,15 +33,18 @@ export function LFGBoard({ squadId, currentUserId }: { squadId: string, currentU
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchPosts = useCallback(async () => {
-    const data = await getLFGPosts(squadId)
-    setPosts(data as any) // Type assertion needed due to join structure
-    setIsLoading(false)
-  }, [squadId])
-
   useEffect(() => {
-    fetchPosts()
-  }, [fetchPosts])
+    let mounted = true
+    const load = async () => {
+      const data = await getLFGPosts(squadId)
+      if (mounted) {
+        setPosts(data as unknown as LFGPost[])
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [squadId])
 
   const handleCreatePost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -54,7 +57,9 @@ export function LFGBoard({ squadId, currentUserId }: { squadId: string, currentU
     } else {
       toast.success('LFG Post created')
       setIsDialogOpen(false)
-      fetchPosts()
+      // Refresh posts
+      const data = await getLFGPosts(squadId)
+      setPosts(data as unknown as LFGPost[])
     }
   }
 
@@ -64,7 +69,8 @@ export function LFGBoard({ squadId, currentUserId }: { squadId: string, currentU
       toast.error(result.error)
     } else {
       toast.success('Joined squad')
-      fetchPosts()
+      const data = await getLFGPosts(squadId)
+      setPosts(data as unknown as LFGPost[])
     }
   }
 
@@ -74,7 +80,8 @@ export function LFGBoard({ squadId, currentUserId }: { squadId: string, currentU
       toast.error(result.error)
     } else {
       toast.success('Left squad')
-      fetchPosts()
+      const data = await getLFGPosts(squadId)
+      setPosts(data as unknown as LFGPost[])
     }
   }
 
@@ -84,7 +91,8 @@ export function LFGBoard({ squadId, currentUserId }: { squadId: string, currentU
       toast.error(result.error)
     } else {
       toast.success('Post deleted')
-      fetchPosts()
+      const data = await getLFGPosts(squadId)
+      setPosts(data as unknown as LFGPost[])
     }
   }
 

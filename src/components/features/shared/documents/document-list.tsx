@@ -7,9 +7,6 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import {
   AlertDialog,
@@ -78,7 +75,7 @@ export function DocumentList({ squadId, documents, currentUserId }: DocumentList
       } else {
         toast.success("Document deleted")
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete document")
     } finally {
       setDeletingId(null)

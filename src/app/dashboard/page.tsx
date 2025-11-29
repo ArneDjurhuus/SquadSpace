@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   // or just fetch raw and count in JS for MVP (or use a separate query)
   // For now, let's just get the squads.
   
-  const { data: squads, error } = await supabase
+  const { data: squads } = await supabase
     .from('squads')
     .select(`
       *,
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
               </div>
               <h3 className="mt-4 text-lg font-semibold">No squads yet</h3>
               <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                You haven't joined or created any squads yet.
+                You haven&apos;t joined or created any squads yet.
               </p>
               <div className="flex gap-2 justify-center">
                 <JoinSquadDialog />

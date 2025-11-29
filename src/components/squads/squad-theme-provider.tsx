@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+
 
 interface Theme {
   primary?: string // HSL string like "262.1 83.3% 57.8%"

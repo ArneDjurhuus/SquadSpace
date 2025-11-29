@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, RotateCw, Plus, ArrowLeft, Trash2, BookOpen } from "lucide-react"
 import { motion } from "framer-motion"
@@ -36,15 +36,18 @@ export function Flashcards({ squadId }: { squadId: string }) {
   const [isCreateCardOpen, setIsCreateCardOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchDecks = useCallback(async () => {
-    const data = await getDecks(squadId)
-    setDecks(data as any)
-    setIsLoading(false)
-  }, [squadId])
-
   useEffect(() => {
-    fetchDecks()
-  }, [fetchDecks])
+    let mounted = true
+    const load = async () => {
+      const data = await getDecks(squadId)
+      if (mounted) {
+        setDecks(data as unknown as Deck[])
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [squadId])
 
   const handleCreateDeck = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -56,7 +59,8 @@ export function Flashcards({ squadId }: { squadId: string }) {
     } else {
       toast.success('Deck created')
       setIsCreateDeckOpen(false)
-      fetchDecks()
+      const data = await getDecks(squadId)
+      setDecks(data as unknown as Deck[])
     }
   }
 
@@ -84,7 +88,8 @@ export function Flashcards({ squadId }: { squadId: string }) {
       const deckCards = await getFlashcards(selectedDeck.id)
       setCards(deckCards as Flashcard[])
       // Update deck count in list
-      fetchDecks()
+      const data = await getDecks(squadId)
+      setDecks(data as unknown as Deck[])
     }
   }
 
@@ -97,7 +102,8 @@ export function Flashcards({ squadId }: { squadId: string }) {
       toast.error(result.error)
     } else {
       toast.success('Deck deleted')
-      fetchDecks()
+      const data = await getDecks(squadId)
+      setDecks(data as unknown as Deck[])
       if (selectedDeck?.id === deckId) {
         setSelectedDeck(null)
       }
@@ -119,7 +125,8 @@ export function Flashcards({ squadId }: { squadId: string }) {
         setCurrentIndex(Math.max(0, newCards.length - 1))
       }
       setIsFlipped(false)
-      fetchDecks() // Update count
+      const data = await getDecks(squadId)
+      setDecks(data as unknown as Deck[]) // Update count
     }
   }
 

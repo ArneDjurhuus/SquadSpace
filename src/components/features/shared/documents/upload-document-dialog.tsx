@@ -65,8 +65,8 @@ export function UploadDocumentDialog({ squadId }: UploadDocumentDialogProps) {
       toast.success("Document uploaded successfully")
       setOpen(false)
       setFile(null)
-    } catch (error: any) {
-      toast.error(error.message || "Failed to upload document")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload document")
     } finally {
       setUploading(false)
     }

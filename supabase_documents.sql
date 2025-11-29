@@ -16,6 +16,7 @@ alter table documents enable row level security;
 -- Policies for Documents Table
 
 -- View: Squad members can view documents
+drop policy if exists "Squad members can view documents" on documents;
 create policy "Squad members can view documents"
   on documents for select
   using (
@@ -27,6 +28,7 @@ create policy "Squad members can view documents"
   );
 
 -- Insert: Squad members can upload documents
+drop policy if exists "Squad members can upload documents" on documents;
 create policy "Squad members can upload documents"
   on documents for insert
   with check (
@@ -38,6 +40,7 @@ create policy "Squad members can upload documents"
   );
 
 -- Delete: Uploader or Squad Admin/Owner can delete
+drop policy if exists "Users can delete their own documents" on documents;
 create policy "Users can delete their own documents"
   on documents for delete
   using (
@@ -61,16 +64,19 @@ on conflict (id) do nothing;
 -- Let's restrict to authenticated users for now to be safe, or rely on the signed URL if private.
 -- Since we set public=true above, anyone with the URL can download. 
 -- Let's stick to public=true for simplicity of access, but we can add RLS to storage.objects if needed.
+drop policy if exists "Documents are accessible by public" on storage.objects;
 create policy "Documents are accessible by public"
   on storage.objects for select
   using ( bucket_id = 'squad-documents' );
 
 -- Upload: Authenticated users can upload
+drop policy if exists "Authenticated users can upload documents" on storage.objects;
 create policy "Authenticated users can upload documents"
   on storage.objects for insert
   with check ( bucket_id = 'squad-documents' and auth.role() = 'authenticated' );
 
 -- Delete: Authenticated users can delete (we rely on app logic to verify ownership, or we can add complex RLS here)
+drop policy if exists "Authenticated users can delete documents" on storage.objects;
 create policy "Authenticated users can delete documents"
   on storage.objects for delete
   using ( bucket_id = 'squad-documents' and auth.role() = 'authenticated' );
