@@ -7,10 +7,22 @@ import { UserNav } from "@/components/layout/user-nav"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { ModeToggle } from "@/components/mode-toggle"
 import { NotificationsPopover } from "@/components/layout/notifications-popover"
+import { Profile } from "@/types"
 
 export async function Navbar() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  
+  // Fetch user profile for status display
+  let profile: Profile | null = null
+  if (user) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, name, email, image, status_emoji, status_text, status_expires_at')
+      .eq('id', user.id)
+      .single()
+    profile = data as Profile | null
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/40 backdrop-blur-md supports-[backdrop-filter]:bg-background/20">
@@ -54,7 +66,7 @@ export async function Navbar() {
                     Dashboard
                   </Button>
                 </Link>
-                <UserNav user={user} />
+                <UserNav user={user} profile={profile} />
               </>
             ) : (
               <>

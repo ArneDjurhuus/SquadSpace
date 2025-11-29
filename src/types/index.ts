@@ -3,6 +3,9 @@ export interface Profile {
   name: string | null
   email: string | null
   image: string | null
+  status_emoji?: string | null
+  status_text?: string | null
+  status_expires_at?: string | null
 }
 
 export interface Channel {

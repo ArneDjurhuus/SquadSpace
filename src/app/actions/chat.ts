@@ -159,3 +159,50 @@ export async function deleteMessage(messageId: string) {
 
   return { success: true }
 }
+
+export async function searchMessages(squadId: string, query: string, channelId?: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated', data: [] }
+  }
+
+  if (!query.trim()) {
+    return { data: [] }
+  }
+
+  // First get all channel IDs for this squad (that the user has access to)
+  const { data: channels } = await supabase
+    .from('channels')
+    .select('id, name')
+    .eq('squad_id', squadId)
+
+  if (!channels || channels.length === 0) {
+    return { data: [] }
+  }
+
+  const channelIds = channelId 
+    ? [channelId]
+    : channels.map(c => c.id)
+
+  // Search messages using ilike for partial matching
+  const { data: messages, error } = await supabase
+    .from('messages')
+    .select(`
+      *,
+      sender:profiles!sender_id(id, name, image),
+      channel:channels!channel_id(id, name)
+    `)
+    .in('channel_id', channelIds)
+    .ilike('content', `%${query}%`)
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  if (error) {
+    console.error('Error searching messages:', error)
+    return { error: error.message, data: [] }
+  }
+
+  return { data: messages || [] }
+}

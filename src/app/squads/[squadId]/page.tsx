@@ -312,6 +312,12 @@ export default async function SquadPage({ params }: SquadPageProps) {
                   squadId={squadId} 
                   initialChannels={channels}
                   currentUser={currentUser}
+                  members={formattedSquad.members.map((m: SquadMemberResponse & { user: SquadMemberResponse['profiles'] }) => ({
+                    id: m.user_id,
+                    name: m.user.name,
+                    email: m.user.email,
+                    image: m.user.image
+                  }))}
                 />
               </TabsContent>
             )}

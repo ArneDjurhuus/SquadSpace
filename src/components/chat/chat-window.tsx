@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { Send, Image as ImageIcon, Loader2, Smile, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { MentionInput, renderMessageWithMentions } from "@/components/chat/mention-input"
 import { getMessages, sendMessage, addReaction, deleteMessage } from "@/app/actions/chat"
 import { createClient } from "@/utils/supabase/client"
 import { cn } from "@/lib/utils"
@@ -15,12 +15,13 @@ import { toast } from "sonner"
 interface ChatWindowProps {
   channel: Channel
   currentUser: Profile
+  members?: Profile[]
   mobileMenu?: React.ReactNode
 }
 
 const COMMON_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"]
 
-export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps) {
+export function ChatWindow({ channel, currentUser, members = [], mobileMenu }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [isUploading, setIsUploading] = useState(false)
@@ -321,7 +322,7 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
                     height={500}
                   />
                 )}
-                <p>{message.content}</p>
+                <p>{renderMessageWithMentions(message.content, members, currentUser.id)}</p>
                 
                 {/* Delete Button */}
                 {isOwn && (
@@ -414,11 +415,17 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
               <ImageIcon className="h-4 w-4" />
             )}
           </Button>
-          <Input
-            placeholder={`Message #${channel.name}`}
+          <MentionInput
+            placeholder={`Message #${channel.name} - Type @ to mention`}
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1"
+            onChange={setNewMessage}
+            onSubmit={() => {
+              if (newMessage.trim()) {
+                handleSendMessage({ preventDefault: () => {} } as React.FormEvent)
+              }
+            }}
+            members={members}
+            disabled={isUploading}
           />
           <Button type="submit" size="icon" disabled={!newMessage.trim() || isUploading}>
             <Send className="h-4 w-4" />
