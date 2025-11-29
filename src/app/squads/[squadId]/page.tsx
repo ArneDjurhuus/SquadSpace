@@ -4,7 +4,7 @@ import { Navbar } from "@/components/layout/navbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Settings, Users, MessageSquare, Calendar } from "lucide-react"
+import { Settings, Users, MessageSquare, Calendar, BarChart3 } from "lucide-react"
 import { getChannels } from "@/app/actions/chat"
 import { getEvents } from "@/app/actions/events"
 import { ChatLayout } from "@/components/chat/chat-layout"
@@ -28,6 +28,8 @@ import { DocumentList } from "@/components/features/shared/documents/document-li
 import { getDocuments } from "@/app/actions/documents"
 import { Tournaments } from "@/components/features/gaming/tournaments"
 import { getTournaments } from "@/app/actions/tournaments"
+import { PollList } from "@/components/polls/poll-list"
+import { getPolls } from "@/app/actions/polls"
 
 interface SquadMemberResponse {
   id: string
@@ -143,6 +145,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
   const events = await getEvents(squadId)
   const documents = await getDocuments(squadId)
   const tournaments = await getTournaments(squadId)
+  const polls = await getPolls(squadId)
   const features = SQUAD_FEATURES[formattedSquad.type as SquadType] || SQUAD_FEATURES.OTHER
 
   return (
@@ -225,6 +228,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
                   {feature === 'chat' && <MessageSquare className="mr-2 h-4 w-4" />}
                   {feature === 'events' && <Calendar className="mr-2 h-4 w-4" />}
                   {feature === 'tasks' && <KanbanSquare className="mr-2 h-4 w-4" />}
+                  {feature === 'polls' && <BarChart3 className="mr-2 h-4 w-4" />}
                   {FEATURE_LABELS[feature]}
                 </TabsTrigger>
               ))}
@@ -330,7 +334,13 @@ export default async function SquadPage({ params }: SquadPageProps) {
               </TabsContent>
             )}
 
-            {features.filter(f => !['chat', 'events', 'tasks'].includes(f)).map(feature => (
+            {features.includes('polls') && (
+              <TabsContent value="polls" className="mt-6">
+                <PollList squadId={squadId} polls={polls} currentUserId={currentUser.id} />
+              </TabsContent>
+            )}
+
+            {features.filter(f => !['chat', 'events', 'tasks', 'polls'].includes(f)).map(feature => (
               <TabsContent key={feature} value={feature} className="mt-6">
                 {feature === 'leaderboard' && <Leaderboard squadId={squadId} />}
                 {feature === 'lfg' && <LFGBoard squadId={squadId} currentUserId={currentUser.id} />}

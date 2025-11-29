@@ -1,20 +1,21 @@
 import { SquadType } from "@/types";
 
 export const SQUAD_FEATURES: Record<SquadType, string[]> = {
-  GAMING: ['chat', 'events', 'tasks', 'leaderboard', 'lfg', 'tournaments'],
-  STUDY: ['chat', 'events', 'tasks', 'resources', 'timer', 'flashcards', 'quiz'],
-  STARTUP: ['chat', 'events', 'tasks', 'roadmap', 'documents', 'investor-updates', 'equity'],
-  CREATIVE: ['chat', 'events', 'tasks', 'portfolio', 'critique', 'assets', 'commissions'],
-  SPORTS: ['chat', 'events', 'tasks', 'lineup', 'playbook', 'stats'],
-  BOOK_CLUB: ['chat', 'events', 'tasks', 'reading-list', 'discussions', 'voting'],
-  FITNESS: ['chat', 'events', 'tasks', 'challenges', 'progress', 'nutrition', 'workouts'],
-  OTHER: ['chat', 'events', 'tasks'],
+  GAMING: ['chat', 'events', 'tasks', 'polls', 'leaderboard', 'lfg', 'tournaments'],
+  STUDY: ['chat', 'events', 'tasks', 'polls', 'resources', 'timer', 'flashcards', 'quiz'],
+  STARTUP: ['chat', 'events', 'tasks', 'polls', 'roadmap', 'documents', 'investor-updates', 'equity'],
+  CREATIVE: ['chat', 'events', 'tasks', 'polls', 'portfolio', 'critique', 'assets', 'commissions'],
+  SPORTS: ['chat', 'events', 'tasks', 'polls', 'lineup', 'playbook', 'stats'],
+  BOOK_CLUB: ['chat', 'events', 'tasks', 'polls', 'reading-list', 'discussions'],
+  FITNESS: ['chat', 'events', 'tasks', 'polls', 'challenges', 'progress', 'nutrition', 'workouts'],
+  OTHER: ['chat', 'events', 'tasks', 'polls'],
 };
 
 export const FEATURE_LABELS: Record<string, string> = {
   chat: 'Chat',
   events: 'Events',
   tasks: 'Tasks',
+  polls: 'Polls',
   leaderboard: 'Leaderboard',
   lfg: 'LFG',
   tournaments: 'Tournaments',
@@ -35,7 +36,6 @@ export const FEATURE_LABELS: Record<string, string> = {
   stats: 'Stats',
   'reading-list': 'Reading List',
   discussions: 'Discussions',
-  voting: 'Voting',
   challenges: 'Challenges',
   progress: 'Progress',
   nutrition: 'Nutrition',

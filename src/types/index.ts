@@ -164,6 +164,44 @@ export interface TaskComment {
   user?: Profile
 }
 
+// Polls & Voting
+export interface Poll {
+  id: string
+  squad_id: string
+  channel_id: string | null
+  created_by: string
+  question: string
+  description: string | null
+  poll_type: 'single' | 'multiple'
+  is_anonymous: boolean
+  allow_add_options: boolean
+  ends_at: string | null
+  is_closed: boolean
+  created_at: string
+  updated_at: string
+  creator?: Profile
+  options?: PollOption[]
+}
+
+export interface PollOption {
+  id: string
+  poll_id: string
+  text: string
+  added_by: string | null
+  order_index: number
+  created_at: string
+  votes?: PollVote[]
+}
+
+export interface PollVote {
+  id: string
+  poll_id: string
+  option_id: string
+  user_id: string
+  created_at: string
+  user?: Profile
+}
+
 export type SquadType = 'GAMING' | 'STUDY' | 'STARTUP' | 'CREATIVE' | 'SPORTS' | 'BOOK_CLUB' | 'FITNESS' | 'OTHER';
 
 export interface SquadSettings {
