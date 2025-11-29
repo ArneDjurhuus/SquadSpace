@@ -127,12 +127,13 @@ export const votePollSchema = z.object({
 // ============================================================================
 
 export const createTaskSchema = z.object({
-  boardId: uuidSchema,
+  squadId: uuidSchema,
+  columnId: uuidSchema,
   title: z.string().min(3, 'Title must be at least 3 characters').max(200, 'Title is too long'),
   description: z.string().max(2000, 'Description is too long').optional(),
-  status: z.enum(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']).default('TODO'),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
   assigneeId: uuidSchema.optional().nullable(),
+  sprintId: uuidSchema.optional().nullable(),
   dueDate: z.string().datetime().optional().nullable(),
   tags: z.array(z.string().max(30)).max(10).optional(),
 });
@@ -143,8 +144,8 @@ export const updateTaskSchema = createTaskSchema.partial().extend({
 
 export const moveTaskSchema = z.object({
   taskId: uuidSchema,
-  status: z.enum(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']),
-  position: z.number().int().min(0).optional(),
+  columnId: uuidSchema,
+  position: z.number().int().min(0),
 });
 
 // ============================================================================
@@ -250,6 +251,30 @@ export const deleteDocumentSchema = z.object({
 export const paginationSchema = z.object({
   cursor: z.string().optional(),
   limit: z.number().int().min(1).max(100).default(20),
+});
+
+// ============================================================================
+// Board & Sprint Schemas
+// ============================================================================
+
+export const createBoardSchema = z.object({
+  squadId: uuidSchema,
+  name: z.string().min(1, 'Board name is required').max(100, 'Board name is too long'),
+});
+
+export const createSprintSchema = z.object({
+  squadId: uuidSchema,
+  name: z.string().min(1, 'Sprint name is required').max(100, 'Sprint name is too long'),
+  startDate: z.string().datetime().optional().nullable(),
+  endDate: z.string().datetime().optional().nullable(),
+});
+
+export const createDocumentRecordSchema = z.object({
+  squadId: uuidSchema,
+  name: z.string().min(1, 'File name is required').max(255, 'File name is too long'),
+  filePath: z.string().min(1, 'File path is required'),
+  size: z.number().int().min(0, 'Size must be positive'),
+  type: z.string().max(100, 'MIME type is too long'),
 });
 
 // ============================================================================

@@ -2,6 +2,9 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
+import { createDocumentRecordSchema } from "@/lib/validation"
+import { ActionResponse, handleActionError, createSuccessResponse } from "@/lib/errors"
 
 export async function getDocuments(squadId: string) {
   const supabase = await createClient()
@@ -27,62 +30,59 @@ export async function getDocuments(squadId: string) {
   return data
 }
 
-export async function createDocumentRecord(data: {
-  squadId: string
-  name: string
-  filePath: string
-  size: number
-  type: string
-}) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export async function createDocumentRecord(data: z.infer<typeof createDocumentRecordSchema>): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const validatedData = createDocumentRecordSchema.parse(data)
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return { error: 'Not authenticated' }
+    if (!user) throw new Error('Not authenticated')
 
-  const { error } = await supabase
-    .from('documents')
-    .insert({
-      squad_id: data.squadId,
-      uploader_id: user.id,
-      name: data.name,
-      file_path: data.filePath,
-      size: data.size,
-      type: data.type
-    })
+    const { error } = await supabase
+      .from('documents')
+      .insert({
+        squad_id: validatedData.squadId,
+        uploader_id: user.id,
+        name: validatedData.name,
+        file_path: validatedData.filePath,
+        size: validatedData.size,
+        type: validatedData.type
+      })
 
-  if (error) return { error: error.message }
+    if (error) throw error
 
-  revalidatePath(`/squads/${data.squadId}`)
-  return { success: true }
+    revalidatePath(`/squads/${validatedData.squadId}`)
+    return createSuccessResponse(undefined)
+  })
 }
 
-export async function deleteDocument(documentId: string, filePath: string, squadId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export async function deleteDocument(documentId: string, filePath: string, squadId: string): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return { error: 'Not authenticated' }
+    if (!user) throw new Error('Not authenticated')
 
-  // 1. Delete from Storage
-  const { error: storageError } = await supabase
-    .storage
-    .from('squad-documents')
-    .remove([filePath])
+    // 1. Delete from Storage
+    const { error: storageError } = await supabase
+      .storage
+      .from('squad-documents')
+      .remove([filePath])
 
-  if (storageError) {
-    console.error('Storage delete error:', storageError)
-    // We continue to delete the record even if storage fails, to keep DB clean? 
-    // Or maybe return error. Let's return error to be safe.
-    return { error: 'Failed to delete file from storage' }
-  }
+    if (storageError) {
+      console.error('Storage delete error:', storageError)
+      throw new Error('Failed to delete file from storage')
+    }
 
-  // 2. Delete from Database
-  const { error: dbError } = await supabase
-    .from('documents')
-    .delete()
-    .eq('id', documentId)
+    // 2. Delete from Database
+    const { error: dbError } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', documentId)
 
-  if (dbError) return { error: dbError.message }
+    if (dbError) throw dbError
 
-  revalidatePath(`/squads/${squadId}`)
-  return { success: true }
+    revalidatePath(`/squads/${squadId}`)
+    return createSuccessResponse(undefined)
+  })
 }

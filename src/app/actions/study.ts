@@ -2,6 +2,9 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+import { createFlashcardSetSchema, createFlashcardSchema } from '@/lib/validation'
+import { ActionResponse, handleActionError, createSuccessResponse } from '@/lib/errors'
 
 export async function getDecks(squadId: string) {
   const supabase = await createClient()
@@ -30,46 +33,44 @@ export async function getDecks(squadId: string) {
   }))
 }
 
-export async function createDeck(squadId: string, formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export async function createDeck(data: z.infer<typeof createFlashcardSetSchema>): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const validated = createFlashcardSetSchema.parse(data)
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return { error: 'Not authenticated' }
+    if (!user) throw new Error('Not authenticated')
 
-  const title = formData.get('title') as string
-  const description = formData.get('description') as string
+    const { error } = await supabase
+      .from('flashcard_decks')
+      .insert({
+        squad_id: validated.squadId,
+        creator_id: user.id,
+        title: validated.title,
+        description: validated.description
+      })
 
-  const { error } = await supabase
-    .from('flashcard_decks')
-    .insert({
-      squad_id: squadId,
-      creator_id: user.id,
-      title,
-      description
-    })
+    if (error) throw error
 
-  if (error) {
-    return { error: error.message }
-  }
-
-  revalidatePath(`/dashboard/squads/${squadId}`)
-  return { success: true }
+    revalidatePath(`/dashboard/squads/${validated.squadId}`)
+    return createSuccessResponse(undefined)
+  })
 }
 
-export async function deleteDeck(squadId: string, deckId: string) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
-    .from('flashcard_decks')
-    .delete()
-    .eq('id', deckId)
+export async function deleteDeck(squadId: string, deckId: string): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const supabase = await createClient()
+    
+    const { error } = await supabase
+      .from('flashcard_decks')
+      .delete()
+      .eq('id', deckId)
 
-  if (error) {
-    return { error: error.message }
-  }
+    if (error) throw error
 
-  revalidatePath(`/dashboard/squads/${squadId}`)
-  return { success: true }
+    revalidatePath(`/dashboard/squads/${squadId}`)
+    return createSuccessResponse(undefined)
+  })
 }
 
 export async function getFlashcards(deckId: string) {
@@ -89,38 +90,36 @@ export async function getFlashcards(deckId: string) {
   return data
 }
 
-export async function createFlashcard(deckId: string, formData: FormData) {
-  const supabase = await createClient()
-  
-  const front = formData.get('front') as string
-  const back = formData.get('back') as string
+export async function createFlashcard(data: z.infer<typeof createFlashcardSchema>): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const validated = createFlashcardSchema.parse(data)
+    const supabase = await createClient()
+    
+    const { error } = await supabase
+      .from('flashcards')
+      .insert({
+        deck_id: validated.setId, // Schema uses setId, DB uses deck_id
+        front: validated.front,
+        back: validated.back
+      })
 
-  const { error } = await supabase
-    .from('flashcards')
-    .insert({
-      deck_id: deckId,
-      front,
-      back
-    })
+    if (error) throw error
 
-  if (error) {
-    return { error: error.message }
-  }
-
-  return { success: true }
+    return createSuccessResponse(undefined)
+  })
 }
 
-export async function deleteFlashcard(cardId: string) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
-    .from('flashcards')
-    .delete()
-    .eq('id', cardId)
+export async function deleteFlashcard(cardId: string): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const supabase = await createClient()
+    
+    const { error } = await supabase
+      .from('flashcards')
+      .delete()
+      .eq('id', cardId)
 
-  if (error) {
-    return { error: error.message }
-  }
+    if (error) throw error
 
-  return { success: true }
+    return createSuccessResponse(undefined)
+  })
 }

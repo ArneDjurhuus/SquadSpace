@@ -2,6 +2,9 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
+import { createTournamentSchema } from "@/lib/validation"
+import { ActionResponse, handleActionError, createSuccessResponse } from "@/lib/errors"
 
 export async function getTournaments(squadId: string) {
   const supabase = await createClient()
@@ -29,103 +32,85 @@ export async function getTournaments(squadId: string) {
   return data
 }
 
-export async function createTournament(squadId: string, formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export async function createTournament(data: z.infer<typeof createTournamentSchema>): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const validatedData = createTournamentSchema.parse(data)
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return { error: 'Unauthorized' }
-  }
+    if (!user) throw new Error('Unauthorized')
 
-  const name = formData.get('name') as string
-  const description = formData.get('description') as string
-  const startDate = formData.get('startDate') as string
-  const format = formData.get('format') as string
+    const { error } = await supabase
+      .from('tournaments')
+      .insert({
+        squad_id: validatedData.squadId,
+        name: validatedData.name,
+        description: validatedData.description,
+        start_date: validatedData.startDate,
+        format: validatedData.format,
+        created_by: user.id
+      })
 
-  if (!name || !startDate || !format) {
-    return { error: 'Missing required fields' }
-  }
+    if (error) throw error
 
-  const { error } = await supabase
-    .from('tournaments')
-    .insert({
-      squad_id: squadId,
-      name,
-      description,
-      start_date: new Date(startDate).toISOString(),
-      format,
-      created_by: user.id
-    })
-
-  if (error) {
-    console.error('Error creating tournament:', error)
-    return { error: 'Failed to create tournament' }
-  }
-
-  revalidatePath(`/squads/${squadId}`)
-  return { success: true }
+    revalidatePath(`/squads/${validatedData.squadId}`)
+    return createSuccessResponse(undefined)
+  })
 }
 
-export async function joinTournament(tournamentId: string, squadId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export async function joinTournament(tournamentId: string, squadId: string): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return { error: 'Unauthorized' }
-  }
+    if (!user) throw new Error('Unauthorized')
 
-  const { error } = await supabase
-    .from('tournament_participants')
-    .insert({
-      tournament_id: tournamentId,
-      user_id: user.id
-    })
+    const { error } = await supabase
+      .from('tournament_participants')
+      .insert({
+        tournament_id: tournamentId,
+        user_id: user.id
+      })
 
-  if (error) {
-    console.error('Error joining tournament:', error)
-    return { error: 'Failed to join tournament' }
-  }
+    if (error) throw error
 
-  revalidatePath(`/squads/${squadId}`)
-  return { success: true }
+    revalidatePath(`/squads/${squadId}`)
+    return createSuccessResponse(undefined)
+  })
 }
 
-export async function leaveTournament(tournamentId: string, squadId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export async function leaveTournament(tournamentId: string, squadId: string): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return { error: 'Unauthorized' }
-  }
+    if (!user) throw new Error('Unauthorized')
 
-  const { error } = await supabase
-    .from('tournament_participants')
-    .delete()
-    .eq('tournament_id', tournamentId)
-    .eq('user_id', user.id)
+    const { error } = await supabase
+      .from('tournament_participants')
+      .delete()
+      .eq('tournament_id', tournamentId)
+      .eq('user_id', user.id)
 
-  if (error) {
-    console.error('Error leaving tournament:', error)
-    return { error: 'Failed to leave tournament' }
-  }
+    if (error) throw error
 
-  revalidatePath(`/squads/${squadId}`)
-  return { success: true }
+    revalidatePath(`/squads/${squadId}`)
+    return createSuccessResponse(undefined)
+  })
 }
 
-export async function deleteTournament(tournamentId: string, squadId: string) {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
-    .from('tournaments')
-    .delete()
-    .eq('id', tournamentId)
+export async function deleteTournament(tournamentId: string, squadId: string): Promise<ActionResponse<void>> {
+  return handleActionError(async () => {
+    const supabase = await createClient()
+    
+    const { error } = await supabase
+      .from('tournaments')
+      .delete()
+      .eq('id', tournamentId)
 
-  if (error) {
-    console.error('Error deleting tournament:', error)
-    return { error: 'Failed to delete tournament' }
-  }
+    if (error) throw error
 
-  revalidatePath(`/squads/${squadId}`)
-  return { success: true }
+    revalidatePath(`/squads/${squadId}`)
+    return createSuccessResponse(undefined)
+  })
 }

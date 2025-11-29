@@ -8,13 +8,21 @@ import {
   successResponse,
   errorResponse,
   handleActionError,
+  createSuccessResponse,
   ErrorCode,
   type ActionResponse,
 } from '@/lib/errors'
 import { log } from '@/lib/logger'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function login(formData: FormData): Promise<ActionResponse<{ redirectTo: string }>> {
   try {
+    // Rate limit: 5 attempts per minute
+    const allowed = await checkRateLimit('login', 5, 60)
+    if (!allowed) {
+      return errorResponse(ErrorCode.AUTH_RATE_LIMITED, 'Too many login attempts. Please try again later.')
+    }
+
     // Validate input
     const validatedData = loginSchema.parse({
       email: formData.get('email'),
@@ -50,6 +58,12 @@ export async function login(formData: FormData): Promise<ActionResponse<{ redire
 
 export async function signup(formData: FormData): Promise<ActionResponse<{ redirectTo: string }>> {
   try {
+    // Rate limit: 3 attempts per hour
+    const allowed = await checkRateLimit('signup', 3, 3600)
+    if (!allowed) {
+      return errorResponse(ErrorCode.AUTH_RATE_LIMITED, 'Too many signup attempts. Please try again later.')
+    }
+
     // Validate input
     const validatedData = registerSchema.parse({
       email: formData.get('email'),
@@ -169,7 +183,7 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse<
     log.info('Profile updated successfully', { userId: user.id })
 
     revalidatePath('/dashboard/settings')
-    return successResponse(undefined)
+    return createSuccessResponse(undefined)
   } catch (error) {
     return handleActionError(error)
   }
