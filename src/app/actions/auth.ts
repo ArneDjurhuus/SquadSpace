@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { loginSchema, registerSchema, updateProfileSchema } from '@/lib/validation'
 import {
-  successResponse,
   errorResponse,
   handleActionError,
   createSuccessResponse,
@@ -93,7 +92,7 @@ export async function signup(formData: FormData): Promise<ActionResponse<{ redir
       password: validatedData.password,
       options: {
         data: {
-          full_name: validatedData.fullName,
+          name: validatedData.fullName, // Changed from full_name to name to match trigger
           username: validatedData.username,
         },
       },
@@ -163,9 +162,9 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse<
     }
 
     const updateData: Record<string, unknown> = {}
-    if (validatedData.fullName !== undefined) updateData.full_name = validatedData.fullName
+    if (validatedData.fullName !== undefined) updateData.name = validatedData.fullName // Changed from full_name
     if (validatedData.bio !== undefined) updateData.bio = validatedData.bio
-    if (validatedData.avatar !== undefined) updateData.avatar_url = validatedData.avatar
+    if (validatedData.avatar !== undefined) updateData.image = validatedData.avatar // Changed from avatar_url
     if (validatedData.status !== undefined) updateData.status = validatedData.status
     if (validatedData.statusEmoji !== undefined) updateData.status_emoji = validatedData.statusEmoji
     if (validatedData.statusExpiresAt !== undefined) updateData.status_expires_at = validatedData.statusExpiresAt

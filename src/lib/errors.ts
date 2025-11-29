@@ -154,7 +154,7 @@ export type ActionResponse<T = unknown> = SuccessResponse<T> | ErrorResponse;
 /**
  * Creates a success response
  */
-export function successResponse<T>(data: T): SuccessResponse<T> {
+export function createSuccessResponse<T>(data: T): SuccessResponse<T> {
   return {
     success: true,
     data,
