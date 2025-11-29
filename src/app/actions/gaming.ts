@@ -91,7 +91,7 @@ export async function joinLFGPost(squadId: string, postId: string) {
   if (!user) return { error: 'Not authenticated' }
 
   // Check if full
-  const { data: post, error: fetchError } = await supabase
+  const { error: fetchError } = await supabase
     .from('lfg_posts')
     .select('max_players, participants:lfg_participants(count)')
     .eq('id', postId)
@@ -99,12 +99,6 @@ export async function joinLFGPost(squadId: string, postId: string) {
   
   if (fetchError) return { error: fetchError.message }
   
-  // @ts-ignore - count is returned as an array of objects or number depending on query, 
-  // but here with select count it might be different. 
-  // Actually supabase-js returns count in a separate property if requested, 
-  // but here we are doing a join.
-  // Let's do a simpler check or trust the client/database constraint if we had one.
-  // For now, let's just try to insert.
   
   const { error } = await supabase
     .from('lfg_participants')

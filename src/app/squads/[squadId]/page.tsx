@@ -107,29 +107,29 @@ export default async function SquadPage({ params }: SquadPageProps) {
                 )}
                 <CardTitle>{formattedSquad.name}</CardTitle>
                 <CardDescription>
-                {formattedSquad.is_private ? "Private Squad" : formattedSquad.description || "No description provided."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  <span>{formattedSquad.members.length} members</span>
-                </div>
-                
-                {formattedSquad.is_private ? (
-                   <div className="bg-muted p-4 rounded-lg text-center space-y-4">
-                    <p className="font-semibold">This squad is private.</p>
-                    <p className="text-sm text-muted-foreground">You need an invite code to join.</p>
+                  {formattedSquad.is_private ? "Private Squad" : formattedSquad.description || "No description provided."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    <span>{formattedSquad.members.length} members</span>
                   </div>
-                ) : (
-                  <JoinSquadButton inviteCode={formattedSquad.inviteCode} />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
+                  
+                  {formattedSquad.is_private ? (
+                     <div className="bg-muted p-4 rounded-lg text-center space-y-4">
+                      <p className="font-semibold">This squad is private.</p>
+                      <p className="text-sm text-muted-foreground">You need an invite code to join.</p>
+                    </div>
+                  ) : (
+                    <JoinSquadButton inviteCode={formattedSquad.inviteCode} />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
       </SquadThemeProvider>
     )
   }

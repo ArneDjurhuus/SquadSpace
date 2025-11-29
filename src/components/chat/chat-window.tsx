@@ -115,6 +115,10 @@ export function ChatWindow({ channel, currentUser, mobileMenu }: ChatWindowProps
       })
       .subscribe((status) => {
         console.log(`Subscription status for channel ${channel.id}:`, status)
+        if (status === 'CHANNEL_ERROR') {
+          toast.error('Connection to chat lost. Reconnecting...')
+          supabase.removeChannel(channelSubscription)
+        }
       })
 
     return () => {

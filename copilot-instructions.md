@@ -45,7 +45,7 @@ Create a space where squads thrive - whether they're gaming teams, study groups,
 
 ### 6. Task Management
 - Kanban-style task boards
-- Task assignment and tracking
+- Task assignment and tracki
 - Sprint planning for project-oriented squads
 - Progress visualization
 - Deadline reminders
