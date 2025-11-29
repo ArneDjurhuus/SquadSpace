@@ -1,6 +1,6 @@
 'use client'
 
-import { updateProfile, ProfileState } from '@/app/actions/user'
+import { updateProfile } from '@/app/actions/user'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +9,7 @@ import { useActionState } from 'react'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ActionResponse } from '@/lib/errors'
 
 interface ProfileFormProps {
   user: {
@@ -19,20 +20,22 @@ interface ProfileFormProps {
   }
 }
 
-const initialState: ProfileState = {
-  message: '',
-  error: '',
-  success: false
+const initialState: ActionResponse = {
+  success: false,
+  error: {
+    code: 'INITIAL' as any,
+    message: ''
+  }
 }
 
 export function ProfileForm({ user }: ProfileFormProps) {
-  const [state, formAction, isPending] = useActionState(updateProfile, initialState)
+  const [state, formAction, isPending] = useActionState(updateProfile, null)
 
   useEffect(() => {
     if (state?.success) {
       toast.success('Profile updated successfully')
-    } else if (state?.error) {
-      toast.error(state.error)
+    } else if (state?.success === false && state.error.message) {
+      toast.error(state.error.message)
     }
   }, [state])
 

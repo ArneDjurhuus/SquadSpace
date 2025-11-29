@@ -95,8 +95,8 @@ export function StatusEditor({ currentEmoji, currentText, trigger }: StatusEdito
     const expiryTime = calculateExpiryTime(expiry)
     const result = await updateStatus(emoji || null, text || null, expiryTime)
     
-    if (result.error) {
-      toast.error(result.error)
+    if (!result.success) {
+      toast.error(result.error.message)
     } else {
       toast.success("Status updated!")
       setOpen(false)
@@ -108,8 +108,8 @@ export function StatusEditor({ currentEmoji, currentText, trigger }: StatusEdito
     setIsLoading(true)
     const result = await clearStatus()
     
-    if (result.error) {
-      toast.error(result.error)
+    if (!result.success) {
+      toast.error(result.error.message)
     } else {
       toast.success("Status cleared")
       setEmoji("")

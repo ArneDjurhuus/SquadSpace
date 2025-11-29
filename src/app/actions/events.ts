@@ -114,6 +114,29 @@ export async function rsvpToEvent(eventId: string, status: 'going' | 'maybe' | '
 
     let finalStatus: string = validatedData.status
 
+    // Try to use the safe RPC function first to handle race conditions
+    try {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('rsvp_to_event_safe', {
+        event_uuid: validatedData.eventId,
+        user_uuid: user.id,
+        desired_status: validatedData.status
+      })
+
+      if (!rpcError && rpcResult) {
+        // RPC succeeded
+        log.info('User RSVPed to event via RPC', { eventId: validatedData.eventId, userId: user.id, result: rpcResult })
+        revalidatePath(`/squads/${eventData.squad_id}`)
+        return successResponse({ status: rpcResult.status })
+      }
+      
+      if (rpcError) {
+        console.warn('RPC rsvp_to_event_safe failed, falling back to manual logic:', rpcError)
+      }
+    } catch (e) {
+      console.warn('RPC rsvp_to_event_safe exception, falling back to manual logic:', e)
+    }
+
+    // Fallback to manual logic if RPC fails or is missing
     // Use a database function to handle race condition
     // This ensures atomic check-and-insert for capacity
     if (validatedData.status === 'going' && eventData.max_participants) {

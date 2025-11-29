@@ -22,24 +22,22 @@ DECLARE
   tokens_to_add INTEGER;
   new_tokens INTEGER;
 BEGIN
-  -- Lock the row for update to prevent race conditions
-  SELECT tokens, last_refilled INTO current_tokens, last_refill
-  FROM rate_limits
-  WHERE key = limit_key
-  FOR UPDATE;
-
-  -- If no record, insert one
-  IF NOT FOUND THEN
-    INSERT INTO rate_limits (key, tokens, last_refilled)
-    VALUES (limit_key, max_tokens - 1, now_time);
-    RETURN TRUE;
-  END IF;
+  -- Upsert to ensure row exists and lock it
+  INSERT INTO rate_limits (key, tokens, last_refilled)
+  VALUES (limit_key, max_tokens, now_time)
+  ON CONFLICT (key) DO UPDATE
+  SET key = EXCLUDED.key -- Dummy update to lock the row
+  RETURNING tokens, last_refilled INTO current_tokens, last_refill;
 
   -- Calculate refill
   time_passed := now_time - last_refill;
-  -- Calculate how many tokens to add based on time passed
-  -- e.g. if refill_rate_seconds is 60 (1 token per minute)
-  tokens_to_add := FLOOR(EXTRACT(EPOCH FROM time_passed) / refill_rate_seconds);
+  
+  -- Avoid division by zero
+  IF refill_rate_seconds <= 0 THEN
+     tokens_to_add := 0;
+  ELSE
+     tokens_to_add := FLOOR(EXTRACT(EPOCH FROM time_passed) / refill_rate_seconds);
+  END IF;
   
   -- Cap at max_tokens
   new_tokens := LEAST(max_tokens, current_tokens + tokens_to_add);
@@ -48,8 +46,17 @@ BEGIN
     -- Consume 1 token
     UPDATE rate_limits
     SET tokens = new_tokens - 1,
-        -- Only update last_refilled if we added tokens, to avoid creeping
-        last_refilled = CASE WHEN tokens_to_add > 0 THEN now_time ELSE last_refill END
+        -- Update last_refilled to maintain precise timing
+        last_refilled = CASE 
+          WHEN tokens_to_add > 0 THEN 
+             CASE 
+               -- If bucket became full, reset timer to now
+               WHEN current_tokens + tokens_to_add >= max_tokens THEN now_time
+               -- Otherwise advance by the exact time equivalent of tokens added
+               ELSE last_refill + (tokens_to_add * refill_rate_seconds * INTERVAL '1 second')
+             END
+          ELSE last_refill 
+        END
     WHERE key = limit_key;
     RETURN TRUE;
   ELSE
@@ -57,4 +64,7 @@ BEGIN
     RETURN FALSE;
   END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Grant execute permissions
+GRANT EXECUTE ON FUNCTION check_rate_limit TO authenticated, service_role;
