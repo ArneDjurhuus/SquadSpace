@@ -24,6 +24,8 @@ import { Flashcards } from "@/components/features/study/flashcards"
 import { StudyTimer } from "@/components/features/study/study-timer"
 import { Roadmap } from "@/components/features/startup/roadmap"
 import { SquadThemeProvider } from "@/components/squads/squad-theme-provider"
+import { DocumentList } from "@/components/features/shared/documents/document-list"
+import { getDocuments } from "@/app/actions/documents"
 
 interface SquadMemberResponse {
   id: string
@@ -136,6 +138,7 @@ export default async function SquadPage({ params }: SquadPageProps) {
 
   const channels = await getChannels(squadId)
   const events = await getEvents(squadId)
+  const documents = await getDocuments(squadId)
   const features = SQUAD_FEATURES[formattedSquad.type as SquadType] || SQUAD_FEATURES.OTHER
 
   return (
@@ -326,11 +329,17 @@ export default async function SquadPage({ params }: SquadPageProps) {
               <TabsContent key={feature} value={feature} className="mt-6">
                 {feature === 'leaderboard' && <Leaderboard squadId={squadId} />}
                 {feature === 'lfg' && <LFGBoard squadId={squadId} currentUserId={currentUser.id} />}
-                {feature === 'flashcards' && <Flashcards squadId={squadId} />}
                 {feature === 'timer' && <StudyTimer squadId={squadId} />}
                 {feature === 'roadmap' && <Roadmap squadId={squadId} />}
+                {(feature === 'documents' || feature === 'resources') && (
+                  <DocumentList 
+                    squadId={squadId} 
+                    documents={documents} 
+                    currentUserId={currentUser.id} 
+                  />
+                )}
                 
-                {!['leaderboard', 'lfg', 'flashcards', 'timer', 'roadmap'].includes(feature) && (
+                {!['leaderboard', 'lfg', 'flashcards', 'timer', 'roadmap', 'documents', 'resources'].includes(feature) && (
                   <Card>
                     <CardHeader>
                       <CardTitle>{FEATURE_LABELS[feature]}</CardTitle>
