@@ -13,35 +13,20 @@ export default async function DashboardPage() {
     redirect("/login")
   }
 
-  // Fetch squads with member count
-  // Note: Supabase doesn't support deep nested aggregation in one query easily like Prisma
-  // We'll fetch squads and then we might need a view or a function for counts, 
-  // or just fetch raw and count in JS for MVP (or use a separate query)
-  // For now, let's just get the squads.
-  
-  const { data: squads } = await supabase
-    .from('squads')
-    .select(`
-      *,
-      squad_members!inner(user_id)
-    `)
-    .eq('squad_members.user_id', user.id)
-    .order('updated_at', { ascending: false })
+  // Fetch squads with member count using RPC function to avoid N+1 query
+  const { data: squads, error } = await supabase.rpc('get_user_squads_with_counts', {
+    user_uuid: user.id
+  })
 
-  // Fetch member counts for each squad
-  // Ideally this should be a view or RPC to avoid N+1, but for now this works
-  const squadsWithCounts = squads ? await Promise.all(squads.map(async (squad) => {
-    const { count } = await supabase
-      .from('squad_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('squad_id', squad.id)
-    
-    return {
-      ...squad,
-      createdAt: new Date(squad.created_at),
-      updatedAt: new Date(squad.updated_at),
-      _count: { members: count || 0 }
-    }
+  if (error) {
+    console.error('Error fetching squads:', error)
+  }
+
+  const squadsWithCounts = squads ? squads.map((squad) => ({
+    ...squad,
+    createdAt: new Date(squad.created_at),
+    // RPC returns member_count as bigint, convert to number
+    _count: { members: Number(squad.member_count) }
   })) : []
 
   return (

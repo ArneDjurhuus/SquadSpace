@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Background } from "@/components/layout/background";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,9 +42,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Background />
-          {children}
-          <Toaster richColors />
+          <ErrorBoundary>
+            <Background />
+            {children}
+            <Toaster richColors />
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>
