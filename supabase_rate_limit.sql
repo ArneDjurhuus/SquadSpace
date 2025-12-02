@@ -1,29 +1,39 @@
-CREATE TABLE IF NOT EXISTS rate_limits (
+-- Rate limiting helpers for Supabase
+-- Safe to run multiple times in the Supabase SQL editor
+
+BEGIN;
+
+-- 1) State table for rate limiting
+CREATE TABLE IF NOT EXISTS public.rate_limits (
   key TEXT PRIMARY KEY,
   tokens INTEGER NOT NULL DEFAULT 10,
-  last_refilled TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  last_refilled TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Enable RLS but allow service role to access
-ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
+-- Enable RLS (access is via the SECURITY DEFINER function below)
+ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
 
--- Function to check and consume rate limit token
+-- 2) Function to check and consume a rate-limit token
 -- Returns TRUE if allowed, FALSE if limited
-CREATE OR REPLACE FUNCTION check_rate_limit(
+CREATE OR REPLACE FUNCTION public.check_rate_limit(
   limit_key TEXT,
   max_tokens INTEGER,
   refill_rate_seconds INTEGER
-) RETURNS BOOLEAN AS $$
+) RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   current_tokens INTEGER;
-  last_refill TIMESTAMP WITH TIME ZONE;
-  now_time TIMESTAMP WITH TIME ZONE := NOW();
-  time_passed INTERVAL;
+  last_refill   TIMESTAMPTZ;
+  now_time      TIMESTAMPTZ := NOW();
+  time_passed   INTERVAL;
   tokens_to_add INTEGER;
-  new_tokens INTEGER;
+  new_tokens    INTEGER;
 BEGIN
   -- Upsert to ensure row exists and lock it
-  INSERT INTO rate_limits (key, tokens, last_refilled)
+  INSERT INTO public.rate_limits (key, tokens, last_refilled)
   VALUES (limit_key, max_tokens, now_time)
   ON CONFLICT (key) DO UPDATE
   SET key = EXCLUDED.key -- Dummy update to lock the row
@@ -31,20 +41,20 @@ BEGIN
 
   -- Calculate refill
   time_passed := now_time - last_refill;
-  
-  -- Avoid division by zero
-  IF refill_rate_seconds <= 0 THEN
-     tokens_to_add := 0;
+
+  -- Guard against negative time deltas and division by zero
+  IF time_passed <= INTERVAL '0 seconds' OR refill_rate_seconds <= 0 THEN
+    tokens_to_add := 0;
   ELSE
-     tokens_to_add := FLOOR(EXTRACT(EPOCH FROM time_passed) / refill_rate_seconds);
+    tokens_to_add := FLOOR(EXTRACT(EPOCH FROM time_passed) / refill_rate_seconds);
   END IF;
-  
+
   -- Cap at max_tokens
   new_tokens := LEAST(max_tokens, current_tokens + tokens_to_add);
-  
+
   IF new_tokens > 0 THEN
     -- Consume 1 token
-    UPDATE rate_limits
+    UPDATE public.rate_limits
     SET tokens = new_tokens - 1,
         -- Update last_refilled to maintain precise timing
         last_refilled = CASE 
@@ -64,7 +74,10 @@ BEGIN
     RETURN FALSE;
   END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$;
 
--- Grant execute permissions
-GRANT EXECUTE ON FUNCTION check_rate_limit TO authenticated, service_role;
+-- 3) Grant execute permissions to app roles
+GRANT EXECUTE ON FUNCTION public.check_rate_limit(TEXT, INTEGER, INTEGER)
+  TO authenticated, service_role;
+
+COMMIT;
